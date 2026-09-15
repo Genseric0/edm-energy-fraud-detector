@@ -1,0 +1,15 @@
+# Frontend (React/Vite)
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+
+# Backend (Java/Maven/IntelliJ)
+backend-spring-boot/target/
+*.class
+.idea/
+*.iml
+.mvn/
