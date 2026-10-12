@@ -150,3 +150,9 @@ O H2 continua a ser o perfil de demonstração por defeito. Para guardar os dado
 A configuração está em `application-postgres.properties`. Os dados ficam no volume Docker `gridaudit_pgdata`, que sobrevive a `docker compose down` (mas **não** a `docker compose down -v`).
 
 **Atenção:** o esquema ainda usa `hibernate.ddl-auto=update` apenas nesta fase experimental; não usar como migração segura em produção. Fazer backups e introduzir migrações versionadas antes de operar com dados reais. Contas e dados demonstrativos do DataSeeder não são dados reais de clientes EDM.
+
+## Roadmap e segurança
+
+O [roadmap de conclusão](ROADMAP.md) define as fases restantes. Consultar o [registo de execução](docs/roadmap-execucao.md) para distinguir o que foi implementado das pendências e o [SECURITY.md](SECURITY.md) para os limites do protótipo.
+
+Os comandos de simulação exigem agora o perfil `demo`; nunca o activar com dados reais. A sessão do navegador não é persistida: recarregar a página ou expirar o token (15 minutos) exige novo login. O login está limitado a 10 pedidos/minuto por IP e por instância.

@@ -121,7 +121,7 @@ public class EnergyAnalysisService {
     @Transactional(readOnly = true)
     public TransformerAnalysisDTO getAnalysisById(Long transformerId) {
         Transformer transformer = transformerRepository.findByIdWithMeters(transformerId)
-                .orElseThrow(() -> new RuntimeException("Transformador não encontrado com o ID: " + transformerId));
+                .orElseThrow(() -> new com.energy.detection.controller.ResourceNotFoundException("Transformador não encontrado com o ID: " + transformerId));
         return calculateAnalysis(transformer);
     }
 
@@ -132,7 +132,7 @@ public class EnergyAnalysisService {
     @Transactional(readOnly = true)
     public TransformerDetailResponseDTO getTransformerDetailsWithIndividualMeters(Long transformerId) {
         Transformer transformer = transformerRepository.findByIdWithMeters(transformerId)
-                .orElseThrow(() -> new RuntimeException("Transformador não encontrado com o ID: " + transformerId));
+                .orElseThrow(() -> new com.energy.detection.controller.ResourceNotFoundException("Transformador não encontrado com o ID: " + transformerId));
 
         TransformerAnalysisDTO summary = calculateAnalysis(transformer);
         List<Meter> meters = transformer.getMeters() != null ? transformer.getMeters() : List.of();
@@ -215,7 +215,7 @@ public class EnergyAnalysisService {
     @Transactional(readOnly = true)
     public List<MeterDTO> getMetersByTransformerId(Long transformerId) {
         Transformer transformer = transformerRepository.findByIdWithMeters(transformerId)
-                .orElseThrow(() -> new RuntimeException("Transformador não encontrado com o ID: " + transformerId));
+                .orElseThrow(() -> new com.energy.detection.controller.ResourceNotFoundException("Transformador não encontrado com o ID: " + transformerId));
 
         return transformer.getMeters().stream()
                 .map(m -> MeterDTO.builder()
@@ -273,9 +273,13 @@ public class EnergyAnalysisService {
     @Transactional
     public TransformerAnalysisDTO simulateTheft(Long transformerId, Double clandestineLoadKwh) {
         Transformer transformer = transformerRepository.findByIdWithMeters(transformerId)
-                .orElseThrow(() -> new RuntimeException("Transformador não encontrado com o ID: " + transformerId));
+                .orElseThrow(() -> new com.energy.detection.controller.ResourceNotFoundException("Transformador não encontrado com o ID: " + transformerId));
 
-        double additional = (clandestineLoadKwh != null && clandestineLoadKwh > 0) ? clandestineLoadKwh : 1800.0;
+        if (clandestineLoadKwh == null || !Double.isFinite(clandestineLoadKwh)
+                || clandestineLoadKwh < 0.001 || clandestineLoadKwh > 1_000_000) {
+            throw new IllegalArgumentException("Energia simulada deve estar entre 0.001 e 1000000 kWh");
+        }
+        double additional = clandestineLoadKwh;
         transformer.setTotalSuppliedKwh(transformer.getTotalSuppliedKwh() + additional);
         transformerRepository.save(transformer);
 
@@ -288,7 +292,7 @@ public class EnergyAnalysisService {
     @Transactional
     public TransformerAnalysisDTO normalizeSector(Long transformerId) {
         Transformer transformer = transformerRepository.findByIdWithMeters(transformerId)
-                .orElseThrow(() -> new RuntimeException("Transformador não encontrado com o ID: " + transformerId));
+                .orElseThrow(() -> new com.energy.detection.controller.ResourceNotFoundException("Transformador não encontrado com o ID: " + transformerId));
 
         double totalBilled = transformer.getMeters().stream()
                 .mapToDouble(Meter::getBilledKwh)

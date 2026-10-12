@@ -23,6 +23,13 @@ import java.util.Map;
 public class EnergyController {
 
     private final EnergyAnalysisService energyAnalysisService;
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.core.env.Environment environment;
+
+    @GetMapping("/capabilities")
+    public Map<String, Boolean> capabilities() {
+        return Map.of("demoEnabled", environment.acceptsProfiles(org.springframework.core.env.Profiles.of("demo")));
+    }
 
     /**
      * Retorna o resumo executivo dos dados (Total Fornecido, Faturado, Perdido, etc.)
@@ -81,29 +88,4 @@ public class EnergyController {
         return ResponseEntity.ok(energyAnalysisService.getMetersByTransformerId(id));
     }
 
-    /**
-     * Endpoint para simulação de furto / ligação clandestina (injetando carga desviada).
-     * Permissão restrita a administradores do sistema.
-     * POST /api/energy/transformers/{id}/simulate-theft
-     */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/transformers/{id}/simulate-theft")
-    public ResponseEntity<TransformerAnalysisDTO> simulateTheft(
-            @PathVariable Long id,
-            @RequestBody(required = false) Map<String, Double> payload) {
-        Double clandestineKwh = (payload != null && payload.containsKey("clandestineKwh")) 
-                ? payload.get("clandestineKwh") : 2200.0;
-        return ResponseEntity.ok(energyAnalysisService.simulateTheft(id, clandestineKwh));
-    }
-
-    /**
-     * Endpoint para simulação de regularização / corte da ligação clandestina.
-     * Permissão restrita a administradores do sistema.
-     * POST /api/energy/transformers/{id}/normalize
-     */
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/transformers/{id}/normalize")
-    public ResponseEntity<TransformerAnalysisDTO> normalizeSector(@PathVariable Long id) {
-        return ResponseEntity.ok(energyAnalysisService.normalizeSector(id));
-    }
 }

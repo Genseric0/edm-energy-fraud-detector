@@ -39,6 +39,14 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
   onNormalizeSector,
   isAdmin
 }) => {
+  const [demoEnabled, setDemoEnabled] = useState(false);
+  useEffect(() => {
+    let active = true;
+    energyApi.getCapabilities()
+      .then(data => { if (active) setDemoEnabled(data.demoEnabled); })
+      .catch(() => { if (active) setDemoEnabled(false); });
+    return () => { active = false; };
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'SUSPEITO_BYPASS' | 'REGULAR' | 'CONSUMO_ELEVADO'>('ALL');
   const [sortBy, setSortBy] = useState<'loss_desc' | 'billed_asc' | 'billed_desc' | 'number'>('loss_desc');
@@ -182,7 +190,7 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
           </button>
 
           {/* Admin Quick Action Controls */}
-          {isAdmin && (
+          {isAdmin && demoEnabled && (
             <div className="flex flex-wrap items-center gap-2">
               {isCritical ? (
                 <button
@@ -190,7 +198,7 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
                   className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  Regularizar Setor (3.5% Perda Técnica)
+                  Demo: normalizar dados sintéticos
                 </button>
               ) : (
                 <button
@@ -198,7 +206,7 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
                   className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
                 >
                   <Flame className="w-4 h-4" />
-                  Simular "Gato" (+2.400 kWh)
+                  Demo: simular discrepância (+2.400 kWh)
                 </button>
               )}
             </div>
