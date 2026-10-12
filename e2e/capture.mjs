@@ -6,6 +6,8 @@ const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
 await mkdir('artifacts/screenshots', { recursive: true });
 try {
+  page.on('console', msg => { if (msg.type() === 'error') console.error('Browser console:', msg.text()); });
+  page.on('pageerror', error => console.error('Browser exception:', error.message));
   await page.goto('http://127.0.0.1:3000', { waitUntil: 'networkidle' });
   await page.getByText('Auditoria Energética', { exact: true }).waitFor();
   await page.screenshot({ path: 'artifacts/screenshots/01-login.png', fullPage: true });
@@ -13,7 +15,14 @@ try {
   await page.locator('input[type="text"]').fill('genserico');
   await page.locator('input[type="password"]').fill(process.env.EDM_ADMIN_PASSWORD);
   await page.getByRole('button', { name: /Acessar Dashboard/i }).click();
-  await page.getByText('Cobertura e limites da detecção').waitFor({ timeout: 30000 });
+  try {
+    await page.getByText('Cobertura e limites da detecção').waitFor({ timeout: 30000 });
+  } catch (error) {
+    await page.screenshot({ path: 'artifacts/screenshots/login-diagnostico.png', fullPage: true });
+    console.error('Texto visível após login:', (await page.locator('body').innerText()).slice(0, 1500));
+    console.error('URL após login:', page.url());
+    throw error;
+  }
   await page.getByText('Total Fornecido').waitFor({ timeout: 30000 });
   await page.screenshot({ path: 'artifacts/screenshots/02-dashboard.png', fullPage: true });
 
