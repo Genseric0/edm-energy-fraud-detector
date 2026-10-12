@@ -35,7 +35,7 @@ import java.util.List;
  * - Sessão STATELESS: cada pedido leva o token JWT no cabeçalho Authorization
  * - Administradores (Genserico, Oxidia): acesso total, incluindo alertas críticos e gestão de dados
  * - Operadores (Leysa, Helen): acesso de consulta geral aos transformadores
- * - Passwords com hash BCrypt (nunca texto plano)
+ * - Passwords provenientes do ambiente e protegidas com BCrypt
  * - CORS habilitado para comunicação com o frontend React
  */
 @Configuration
@@ -62,29 +62,38 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         UserDetails genserico = User.builder()
                 .username("genserico")
-                .password(passwordEncoder.encode("EdmMz#2026!Adm"))
+                .password(passwordEncoder.encode(requiredPassword("EDM_ADMIN_PASSWORD")))
                 .authorities("ROLE_ADMIN", "VIEW_ALERTS", "MANAGE_ENERGY_DATA", "AUDIT_SECTORS")
                 .build();
 
         UserDetails oxidia = User.builder()
                 .username("oxidia")
-                .password(passwordEncoder.encode("EdmMz#2026!Adm"))
+                .password(passwordEncoder.encode(requiredPassword("EDM_ADMIN_PASSWORD")))
                 .authorities("ROLE_ADMIN", "VIEW_ALERTS", "MANAGE_ENERGY_DATA", "AUDIT_SECTORS")
                 .build();
 
         UserDetails leysa = User.builder()
                 .username("leysa")
-                .password(passwordEncoder.encode("EdmMz#2026!Op"))
+                .password(passwordEncoder.encode(requiredPassword("EDM_OPERATOR_PASSWORD")))
                 .authorities("ROLE_OPERATOR", "VIEW_ENERGY_DATA")
                 .build();
 
         UserDetails helen = User.builder()
                 .username("helen")
-                .password(passwordEncoder.encode("EdmMz#2026!Op"))
+                .password(passwordEncoder.encode(requiredPassword("EDM_OPERATOR_PASSWORD")))
                 .authorities("ROLE_OPERATOR", "VIEW_ENERGY_DATA")
                 .build();
 
         return new InMemoryUserDetailsManager(genserico, oxidia, leysa, helen);
+    }
+
+    // As passwords são definidas fora do repositório para evitar credenciais públicas.
+    private static String requiredPassword(String key) {
+        String value = System.getenv(key);
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException("Variável de ambiente obrigatória: " + key);
+        }
+        return value;
     }
 
     @Bean
@@ -106,11 +115,12 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
-            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)) // Permite H2 Console
+            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)) // Permite H2 Console
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Rotas públicas (login e H2 Console, útil para inspecionar dados durante a demo)
-                .requestMatchers("/api/auth/**", "/h2-console/**", "/error").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .requestMatchers("/error").permitAll()
 
                 // Regra do Administrador: Apenas ADMIN pode visualizar alertas críticos e gerenciar dados
                 .requestMatchers("/api/energy/alerts").hasRole("ADMIN")
@@ -131,10 +141,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOrigins(List.of(System.getenv().getOrDefault("EDM_CORS_ORIGIN", "http://localhost:3000")));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
