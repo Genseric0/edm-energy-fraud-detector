@@ -4,7 +4,7 @@ import {
   Zap,
   Lock,
   User,
-  KeyRound
+  KeyRound,
   AlertCircle,
 } from 'lucide-react';
 
