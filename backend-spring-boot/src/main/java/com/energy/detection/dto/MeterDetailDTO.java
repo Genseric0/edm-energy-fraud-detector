@@ -21,6 +21,8 @@ public class MeterDetailDTO {
     private String phoneNumber;
     private String address;
     private Double billedKwh;
+    private String installationLocation;
+    private boolean remoteReadingEnabled;
 
     // Cálculo Individualizado da Perda
     /** Participação percentual deste medidor no faturamento total do transformador (%) */
