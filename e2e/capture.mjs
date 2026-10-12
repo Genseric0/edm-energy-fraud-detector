@@ -8,7 +8,7 @@ await mkdir('artifacts/screenshots', { recursive: true });
 try {
   page.on('console', msg => { if (msg.type() === 'error') console.error('Browser console:', msg.text()); });
   page.on('pageerror', error => console.error('Browser exception:', error.message));
-  await page.goto('http://127.0.0.1:3000', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
   await page.getByText('Auditoria Energética', { exact: true }).waitFor();
   await page.screenshot({ path: 'artifacts/screenshots/01-login.png', fullPage: true });
 
@@ -28,11 +28,11 @@ try {
 
   const token = await page.evaluate(() => localStorage.getItem('gridaudit_jwt_token'));
   assert.ok(token, 'Token de autenticação em falta');
-  const summary = await page.request.get('http://127.0.0.1:3000/api/energy/summary', {
+  const summary = await page.request.get('http://localhost:3000/api/energy/summary', {
     headers: { Authorization: 'Bearer ' + token },
   });
   assert.equal(summary.status(), 200, 'API de resumo falhou');
-  const transformers = await page.request.get('http://127.0.0.1:3000/api/energy/transformers', {
+  const transformers = await page.request.get('http://localhost:3000/api/energy/transformers', {
     headers: { Authorization: 'Bearer ' + token },
   });
   assert.equal(transformers.status(), 200);
