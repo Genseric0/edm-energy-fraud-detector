@@ -136,3 +136,17 @@ Nesta fase, os registos têm origem `MANUAL`. Ainda não existe integração com
 **Importante:** variações de consumo e discrepâncias por transformador são indícios para investigação. A posição do contador e a análise estatística não comprovam que houve bypass ou fraude; é indispensável confirmação técnica. O limiar de 5% e a tarifa de 7,50 MT/kWh são valores de demonstração, não parâmetros oficiais validados.
 
 Os testes de compilação e de API executam automaticamente no GitHub Actions após alterações e diariamente por agendamento; a confirmação deve ser feita no separador Actions do repositório.
+
+## PostgreSQL persistente (desenvolvimento local)
+
+O H2 continua a ser o perfil de demonstração por defeito. Para guardar os dados após reiniciar o servidor, utilizar PostgreSQL 16 com Docker.
+
+1. Ter Docker Desktop instalado e iniciado. Criar um ficheiro `.env` **local** na raiz com `DB_PASSWORD` definido com valor privado forte (não publicar o ficheiro).
+2. Na raiz do repositório executar `docker compose up -d postgres`.
+3. No PowerShell, definir `$env:SPRING_PROFILES_ACTIVE="postgres"`, `$env:DB_PASSWORD="<a mesma password configurada no .env>"` (substituindo pelo valor local), além de `EDM_ADMIN_PASSWORD`, `EDM_OPERATOR_PASSWORD` e `JWT_SECRET`.
+4. Executar `cd backend-spring-boot` e `mvn spring-boot:run`.
+5. Reiniciar o backend e consultar novamente `GET /api/energy/meters/{meterId}/readings` para confirmar a persistência.
+
+A configuração está em `application-postgres.properties`. Os dados ficam no volume Docker `gridaudit_pgdata`, que sobrevive a `docker compose down` (mas **não** a `docker compose down -v`).
+
+**Atenção:** o esquema ainda usa `hibernate.ddl-auto=update` apenas nesta fase experimental; não usar como migração segura em produção. Fazer backups e introduzir migrações versionadas antes de operar com dados reais. Contas e dados demonstrativos do DataSeeder não são dados reais de clientes EDM.
