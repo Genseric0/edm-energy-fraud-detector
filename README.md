@@ -121,3 +121,18 @@ As credenciais anteriormente publicadas devem ser consideradas comprometidas e s
 
 **Backend:** Java 17, Spring Boot 3.2, Spring Security, JWT (JJWT 0.12.6), BCrypt, H2, Lombok, Maven
 **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, Recharts, jsPDF
+
+## Smart Metering — fase inicial
+
+A base de dados distingue a localização física dos contadores: `POLE` (poste), `INSIDE_HOME` (interior da residência), `OUTSIDE_HOME` (exterior) ou `UNKNOWN` (não confirmado). O campo `remoteReadingEnabled` indica disponibilidade de telemedição, sem assumir que existe integração real.
+
+Uma tabela `meter_readings` guarda leituras históricas com data, energia em kWh e origem. A API disponibiliza:
+
+- `GET /api/energy/meters/{meterId}/readings`: consulta as últimas 100 leituras, para utilizadores autenticados.
+- `POST /api/energy/meters/{meterId}/readings`: entrada **manual**, exclusiva a ADMIN, com JSON `{"recordedAt":"2026-10-12T07:00:00Z","energyKwh":125.5}`.
+
+Nesta fase, os registos têm origem `MANUAL`. Ainda não existe integração com hardware, protocolo AMI, leitura automática ou validação metrológica. A base H2 continua a ser volátil: os históricos desaparecem quando se reinicia a aplicação.
+
+**Importante:** variações de consumo e discrepâncias por transformador são indícios para investigação. A posição do contador e a análise estatística não comprovam que houve bypass ou fraude; é indispensável confirmação técnica. O limiar de 5% e a tarifa de 7,50 MT/kWh são valores de demonstração, não parâmetros oficiais validados.
+
+Os testes de compilação e de API executam automaticamente no GitHub Actions após alterações e diariamente por agendamento; a confirmação deve ser feita no separador Actions do repositório.
