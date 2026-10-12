@@ -78,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (username: string, password: string): Promise<{ success: boolean; message: string }> => {
     try {
-      const response = await authApi.login(username.trim(), password.trim());
+      const response = await authApi.login(username.trim(), password);
 
       if (response.authenticated && response.token && response.username) {
         setStoredToken(response.token);
