@@ -1,0 +1,100 @@
+name: Verificação visual e PostgreSQL
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-and-persistence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: gridaudit
+          POSTGRES_USER: gridaudit
+          POSTGRES_PASSWORD: ci-database-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gridaudit -d gridaudit"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      SPRING_PROFILES_ACTIVE: postgres
+      DB_PASSWORD: ci-database-only
+      EDM_ADMIN_PASSWORD: ci-admin-test-password
+      EDM_OPERATOR_PASSWORD: ci-operator-test-password
+      JWT_SECRET: ci-only-generated-test-key-with-at-least-32-bytes
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: backend-spring-boot/pom.xml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Compilar aplicação
+        run: |
+          mvn -B verify -f backend-spring-boot/pom.xml
+          npm ci
+          npm run build
+      - name: Instalar navegador para teste visual
+        run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Validar persistência e capturar interface
+        shell: bash
+        run: |
+          set -euo pipefail
+          JAR=backend-spring-boot/target/energy-theft-detection-1.0.0.jar
+          server_pid=""
+          frontend_pid=""
+          cleanup() {
+            if [ -n "$server_pid" ]; then kill "$server_pid" 2>/dev/null || true; fi
+            if [ -n "$frontend_pid" ]; then kill "$frontend_pid" 2>/dev/null || true; fi
+          }
+          trap cleanup EXIT
+          start_backend() {
+            java -jar "$JAR" > artifacts/backend.log 2>&1 &
+            server_pid=$!
+            for i in $(seq 1 60); do
+              if curl --silent --max-time 2 -o /dev/null http://127.0.0.1:8080/api/auth/me; then return 0; fi
+              if ! kill -0 "$server_pid" 2>/dev/null; then cat artifacts/backend.log; return 1; fi
+              sleep 2
+            done
+            cat artifacts/backend.log
+            return 1
+          }
+          mkdir -p artifacts
+          start_backend
+          python3 e2e/persistence.py write
+          kill "$server_pid"
+          wait "$server_pid" || true
+          server_pid=""
+          sleep 2
+          start_backend
+          python3 e2e/persistence.py verify
+          npm run dev -- --host 127.0.0.1 > artifacts/frontend.log 2>&1 &
+          frontend_pid=$!
+          for i in $(seq 1 40); do
+            if curl --silent --fail http://127.0.0.1:3000/ > /dev/null; then break; fi
+            sleep 2
+          done
+          node e2e/capture.mjs
+      - name: Guardar screenshots e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridaudit-verificacao-visual
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
