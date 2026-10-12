@@ -20,7 +20,7 @@ A CI da base já tinha sucesso no workflow visual/PostgreSQL; a observação do 
 
 ## Arranque de demonstração
 
-Definir `EDM_ADMIN_PASSWORD`, `EDM_OPERATOR_PASSWORD` e `JWT_SECRET` (mínimo 32 bytes, aleatório). Para disponibilizar os comandos sintéticos de simulação, definir `SPRING_PROFILES_ACTIVE=demo`. Com PostgreSQL e dados exclusivamente sintéticos, os perfis podem ser `postgres,demo`.
+Definir `EDM_GENSERICO_PASSWORD`, `EDM_OXIDIA_PASSWORD`, `EDM_LEYSA_PASSWORD`, `EDM_HELEN_PASSWORD` (distintas, 12+ caracteres, até 72 bytes UTF-8) e `JWT_SECRET` (mínimo 32 bytes, aleatório). Para disponibilizar os comandos sintéticos de simulação, definir `SPRING_PROFILES_ACTIVE=demo`. Com PostgreSQL e dados exclusivamente sintéticos, os perfis podem ser `postgres,demo`.
 
 Sem `demo`, os endpoints de simulação não existem (404 para administrador autenticado); operador continua sem autorização (403). A interface consulta `/api/energy/capabilities` e esconde esses comandos fora da demo.
 
@@ -40,3 +40,18 @@ Sem `demo`, os endpoints de simulação não existem (404 para administrador aut
 5. Fases 3–6: interface/PWA completa, acessibilidade, análise explicável, scans/pentest isolados, actualização de framework e operação.
 
 Nenhum destes pontos deve ser apresentado como concluído por este lote. O merge exige CI verde e revisão humana, conforme o princípio 7 do roadmap.
+
+
+## Segundo lote — 12/10/2026, 20h Maputo
+
+Base: `533dd567` do PR #2, ainda aberto e com os três workflows aprovados no início desta execução. Branch dependente: `fix/individual-credentials`; não integrada em main. A Fase 0 continua em curso.
+
+- SEC-04: substituição das duas passwords por papel por quatro passwords individuais, sem fallback para as antigas variáveis. Configuração inválida, duplicada ou acima do limite BCrypt impede o arranque sem expor valores.
+- SEC-04: o filtro JWT consulta UserDetailsService por pedido e aplica as permissões actuais; rejeita contas removidas, desactivadas, bloqueadas ou expiradas. Não é ainda a implementação de utilizadores em BD, administração de contas ou revogação por sessão.
+- Autenticação: falhas de autenticação (incluindo conta bloqueada/desactivada) recebem resposta genérica 401 no login.
+- QA: testes adicionais de isolamento das passwords, arranque inválido, limites UTF-8/BCrypt, redução de privilégios e estado da conta; workflows e E2E usam as novas variáveis. Workflows de PR abrangem também branches dependentes.
+- Adopção: guia de contribuição em português e inglês, com arranque e verificação reproduzíveis e regras para contribuições seguras.
+- Métricas públicas observadas em 12/10/2026: 0 estrelas e 0 forks, sem alteração face à observação anterior. Contagem de contribuidores indisponível pelo conector; tráfego/alcance não medidos.
+- Validação: resultados concretos da CI serão registados no PR deste lote; não confundir testes adicionados com testes aprovados.
+
+**Próximo passo:** migrar contas para BD com esquema versionado, bloqueio persistente e administração autorizada; depois refresh e revogação por sessão. SEC-02 continua dependente de rotação externa e limpeza coordenada do histórico. O PR #2 precisa de revisão humana; o segundo lote deve ser revisto sobre essa base e retargetado após integração. A Fase 0 não está concluída.

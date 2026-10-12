@@ -1,6 +1,7 @@
 package com.energy.detection;
 
 import com.energy.detection.config.SecurityConfig;
+import com.energy.detection.config.AccountsConfiguration;
 import com.energy.detection.controller.DemoEnergyController;
 import com.energy.detection.security.JwtUtil;
 import com.energy.detection.service.EnergyAnalysisService;
@@ -24,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "app.security.jwt.secret=unit-test-only-key-of-at-least-32-bytes",
     "app.security.jwt.expiration-ms=900000"
 })
-@Import({SecurityConfig.class, JwtUtil.class})
+@Import({SecurityConfig.class, AccountsConfiguration.class, JwtUtil.class})
 class DemoSecurityTest {
     @Autowired MockMvc mvc;
     @MockBean EnergyAnalysisService service;

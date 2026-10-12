@@ -15,12 +15,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -48,56 +44,6 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     @org.springframework.beans.factory.annotation.Value("${EDM_CORS_ORIGIN:http://localhost:3000}")
     private String corsOrigin;
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    /**
-     * Cadastro de utilizadores em memória (adequado para a demo com H2;
-     * numa evolução para produção, isto passaria a vir da tabela `utilizador` via JPA).
-     *
-     * Administradores: Genserico, Oxidia
-     * Operadores: Leysa, Helen
-     */
-    @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
-        UserDetails genserico = User.builder()
-                .username("genserico")
-                .password(passwordEncoder.encode(requiredPassword("EDM_ADMIN_PASSWORD")))
-                .authorities("ROLE_ADMIN", "VIEW_ALERTS", "MANAGE_ENERGY_DATA", "AUDIT_SECTORS")
-                .build();
-
-        UserDetails oxidia = User.builder()
-                .username("oxidia")
-                .password(passwordEncoder.encode(requiredPassword("EDM_ADMIN_PASSWORD")))
-                .authorities("ROLE_ADMIN", "VIEW_ALERTS", "MANAGE_ENERGY_DATA", "AUDIT_SECTORS")
-                .build();
-
-        UserDetails leysa = User.builder()
-                .username("leysa")
-                .password(passwordEncoder.encode(requiredPassword("EDM_OPERATOR_PASSWORD")))
-                .authorities("ROLE_OPERATOR", "VIEW_ENERGY_DATA")
-                .build();
-
-        UserDetails helen = User.builder()
-                .username("helen")
-                .password(passwordEncoder.encode(requiredPassword("EDM_OPERATOR_PASSWORD")))
-                .authorities("ROLE_OPERATOR", "VIEW_ENERGY_DATA")
-                .build();
-
-        return new InMemoryUserDetailsManager(genserico, oxidia, leysa, helen);
-    }
-
-    // As passwords são definidas fora do repositório para evitar credenciais públicas.
-    private static String requiredPassword(String key) {
-        String value = System.getenv(key);
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException("Variável de ambiente obrigatória: " + key);
-        }
-        return value;
-    }
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider(

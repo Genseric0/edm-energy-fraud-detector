@@ -7,17 +7,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Filtro executado uma vez por pedido: lê o cabeçalho Authorization,
@@ -30,6 +27,7 @@ import java.util.List;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final UserDetailsService users;
 
     @Override
     protected void doFilterInternal(
@@ -51,21 +49,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String username = jwtUtil.extrairUsername(token);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                List<String> authorityStrings = jwtUtil.extrairAuthorities(token);
-                List<GrantedAuthority> authorities = authorityStrings.stream()
-                        .map(SimpleGrantedAuthority::new)
-                        .map(GrantedAuthority.class::cast)
-                        .toList();
-
-                UserDetails userDetails = User.builder()
-                        .username(username)
-                        .password("") // não necessário pós-autenticação; o token já prova a identidade
-                        .authorities(authorities)
-                        .build();
-
-                if (jwtUtil.tokenValido(token, userDetails)) {
+                // A assinatura identifica a sessão; o servidor decide as permissões actuais.
+                UserDetails userDetails = users.loadUserByUsername(username);
+                if (userDetails.isEnabled() && userDetails.isAccountNonLocked()
+                        && userDetails.isAccountNonExpired() && userDetails.isCredentialsNonExpired()
+                        && jwtUtil.tokenValido(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }

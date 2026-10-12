@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
   schedule:
     - cron: '20 3 * * *'
   workflow_dispatch:
@@ -28,8 +27,10 @@ jobs:
       - name: Testar arranque, login e resumo da API
         env:
           SPRING_PROFILES_ACTIVE: demo
-          EDM_ADMIN_PASSWORD: ci-admin-test-password
-          EDM_OPERATOR_PASSWORD: ci-operator-test-password
+          EDM_GENSERICO_PASSWORD: ci-genserico-test-password
+          EDM_OXIDIA_PASSWORD: ci-oxidia-test-password
+          EDM_LEYSA_PASSWORD: ci-leysa-test-password
+          EDM_HELEN_PASSWORD: ci-helen-test-password
           JWT_SECRET: ci-only-generated-test-key-with-at-least-32-bytes
         run: |
           java -jar backend-spring-boot/target/energy-theft-detection-1.0.0.jar > /tmp/edm-backend.log 2>&1 &
@@ -55,7 +56,7 @@ jobs:
           import json
           import urllib.request
           base = "http://localhost:8080"
-          data = json.dumps({"username": "genserico", "password": "ci-admin-test-password"}).encode()
+          data = json.dumps({"username": "genserico", "password": "ci-genserico-test-password"}).encode()
           req = urllib.request.Request(base + "/api/auth/login", data=data, headers={"Content-Type": "application/json"})
           with urllib.request.urlopen(req, timeout=15) as response:
               login = json.load(response)

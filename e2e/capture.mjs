@@ -13,7 +13,7 @@ try {
   await page.screenshot({ path: 'artifacts/screenshots/01-login.png', fullPage: true });
 
   await page.locator('input[type="text"]').fill('genserico');
-  await page.locator('input[type="password"]').fill(process.env.EDM_ADMIN_PASSWORD);
+  await page.locator('input[type="password"]').fill(process.env.EDM_GENSERICO_PASSWORD);
   const loginResponse = page.waitForResponse(response => response.url().endsWith('/api/auth/login') && response.request().method() === 'POST');
   await page.getByRole('button', { name: /Acessar Dashboard/i }).click();
   const { token } = await (await loginResponse).json();

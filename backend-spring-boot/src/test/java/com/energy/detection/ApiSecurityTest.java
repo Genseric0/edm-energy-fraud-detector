@@ -1,6 +1,7 @@
 package com.energy.detection;
 
 import com.energy.detection.config.SecurityConfig;
+import com.energy.detection.config.AccountsConfiguration;
 import com.energy.detection.controller.*;
 import com.energy.detection.security.JwtUtil;
 import com.energy.detection.service.EnergyAnalysisService;
@@ -21,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "app.security.jwt.expiration-ms=900000",
     "EDM_CORS_ORIGIN=http://localhost:3000"
 })
-@Import({SecurityConfig.class, JwtUtil.class})
+@Import({SecurityConfig.class, AccountsConfiguration.class, JwtUtil.class})
 class ApiSecurityTest {
     @Autowired MockMvc mvc;
     @MockBean EnergyAnalysisService service;

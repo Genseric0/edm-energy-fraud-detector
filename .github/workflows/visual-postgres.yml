@@ -4,7 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -30,8 +29,10 @@ jobs:
       SPRING_PROFILES_ACTIVE: postgres
       EDM_CORS_ORIGIN: http://127.0.0.1:3000
       DB_PASSWORD: ci-database-only
-      EDM_ADMIN_PASSWORD: ci-admin-test-password
-      EDM_OPERATOR_PASSWORD: ci-operator-test-password
+      EDM_GENSERICO_PASSWORD: ci-genserico-test-password
+      EDM_OXIDIA_PASSWORD: ci-oxidia-test-password
+      EDM_LEYSA_PASSWORD: ci-leysa-test-password
+      EDM_HELEN_PASSWORD: ci-helen-test-password
       JWT_SECRET: ci-only-generated-test-key-with-at-least-32-bytes
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
