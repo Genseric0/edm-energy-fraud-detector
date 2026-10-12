@@ -41,6 +41,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- PostgreSQL: persistência permanente quando o perfil postgres está activo -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Spring Security (Autenticação, Autorização RBAC e Proteção de Endpoints) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
