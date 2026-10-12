@@ -15,7 +15,7 @@ def call(path, token=None, payload=None):
         return json.load(response)
 
 token = call("/api/auth/login", payload={
-    "username": "genserico", "password": os.environ["EDM_ADMIN_PASSWORD"]
+    "username": "genserico", "password": os.environ["EDM_GENSERICO_PASSWORD"]
 })["token"]
 state = Path("/tmp/gridaudit-persistence.json")
 

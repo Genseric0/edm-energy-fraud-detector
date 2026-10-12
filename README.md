@@ -71,8 +71,10 @@ Antes de iniciar o backend, configure estas variáveis de ambiente:
 
 | Variável | Finalidade |
 |---|---|
-| `EDM_ADMIN_PASSWORD` | Password dos utilizadores de demonstração com papel ADMIN |
-| `EDM_OPERATOR_PASSWORD` | Password dos utilizadores de demonstração com papel OPERATOR |
+| `EDM_GENSERICO_PASSWORD` | Password individual de `genserico` (ADMIN) |
+| `EDM_OXIDIA_PASSWORD` | Password individual de `oxidia` (ADMIN) |
+| `EDM_LEYSA_PASSWORD` | Password individual de `leysa` (OPERATOR) |
+| `EDM_HELEN_PASSWORD` | Password individual de `helen` (OPERATOR) |
 | `JWT_SECRET` | Segredo aleatório com pelo menos 32 bytes para assinatura HS256 |
 | `EDM_CORS_ORIGIN` | Origem permitida do frontend (por defeito `http://localhost:3000`) |
 | `H2_CONSOLE_ENABLED` | `true` somente quando for preciso depurar localmente (por defeito `false`) |
@@ -80,14 +82,18 @@ Antes de iniciar o backend, configure estas variáveis de ambiente:
 Exemplo em Linux/macOS:
 
 ```bash
-export EDM_ADMIN_PASSWORD='defina-uma-password-unica-e-forte'
-export EDM_OPERATOR_PASSWORD='defina-outra-password-unica-e-forte'
+export EDM_GENSERICO_PASSWORD="$(openssl rand -hex 24)"
+export EDM_OXIDIA_PASSWORD="$(openssl rand -hex 24)"
+export EDM_LEYSA_PASSWORD="$(openssl rand -hex 24)"
+export EDM_HELEN_PASSWORD="$(openssl rand -hex 24)"
 export JWT_SECRET="$(openssl rand -hex 32)"
 cd backend-spring-boot
 mvn spring-boot:run
 ```
 
-No PowerShell, defina os mesmos valores em `$env:EDM_ADMIN_PASSWORD`, `$env:EDM_OPERATOR_PASSWORD` e `$env:JWT_SECRET` antes de executar Maven. Não coloque valores reais em ficheiros versionados.
+No PowerShell, defina os mesmos valores em `$env:EDM_GENSERICO_PASSWORD`, `$env:EDM_OXIDIA_PASSWORD`, `$env:EDM_LEYSA_PASSWORD`, `$env:EDM_HELEN_PASSWORD` e `$env:JWT_SECRET` antes de executar Maven. Não coloque valores reais em ficheiros versionados.
+
+Cada password deve ser diferente, ter pelo menos 12 caracteres e no máximo 72 bytes UTF-8. As antigas variáveis por papel deixam de ser aceites; é necessário configurar as quatro variáveis individuais antes de actualizar. Os exemplos geram valores novos a cada execução.
 
 **Utilizadores de demonstração:** `genserico` e `oxidia` (ADMIN), `leysa` e `helen` (OPERATOR). Estes nomes não são contas de produção. O acesso rápido com passwords embutidas foi removido.
 
@@ -143,7 +149,7 @@ O H2 continua a ser o perfil de demonstração por defeito. Para guardar os dado
 
 1. Ter Docker Desktop instalado e iniciado. Criar um ficheiro `.env` **local** na raiz com `DB_PASSWORD` definido com valor privado forte (não publicar o ficheiro).
 2. Na raiz do repositório executar `docker compose up -d postgres`.
-3. No PowerShell, definir `$env:SPRING_PROFILES_ACTIVE="postgres"`, `$env:DB_PASSWORD="<a mesma password configurada no .env>"` (substituindo pelo valor local), além de `EDM_ADMIN_PASSWORD`, `EDM_OPERATOR_PASSWORD` e `JWT_SECRET`.
+3. No PowerShell, definir `$env:SPRING_PROFILES_ACTIVE="postgres"`, `$env:DB_PASSWORD="<a mesma password configurada no .env>"` (substituindo pelo valor local), além de as quatro passwords individuais da tabela acima e `JWT_SECRET`.
 4. Executar `cd backend-spring-boot` e `mvn spring-boot:run`.
 5. Reiniciar o backend e consultar novamente `GET /api/energy/meters/{meterId}/readings` para confirmar a persistência.
 
@@ -156,3 +162,5 @@ A configuração está em `application-postgres.properties`. Os dados ficam no v
 O [roadmap de conclusão](ROADMAP.md) define as fases restantes. Consultar o [registo de execução](docs/roadmap-execucao.md) para distinguir o que foi implementado das pendências e o [SECURITY.md](SECURITY.md) para os limites do protótipo.
 
 Os comandos de simulação exigem agora o perfil `demo`; nunca o activar com dados reais. A sessão do navegador não é persistida: recarregar a página ou expirar o token (15 minutos) exige novo login. O login está limitado a 10 pedidos/minuto por IP e por instância.
+
+Para contribuir, consulte [CONTRIBUTING.md](CONTRIBUTING.md) (português / English).

@@ -8,7 +8,8 @@ Contactar o mantenedor por um canal privado previamente combinado. Se estiver di
 
 ## Limites actuais
 
-- Ainda existem contas fixas em memória com passwords por papel. A migração para utilizadores individuais em BD é obrigatória antes de um piloto.
+- Ainda existem contas fixas em memória, agora com passwords individuais obrigatórias e distintas. A migração para utilizadores individuais em BD é obrigatória antes de um piloto.
+- Cada pedido com token consulta o utilizador actual: contas removidas, desactivadas, bloqueadas ou expiradas não autenticam; as permissões vêm do servidor, não das claims antigas. Ainda não existe endpoint de administração de contas nem revogação persistente por sessão; alterar uma password não revoga por si só todos os tokens.
 - Os tokens têm duração máxima de 15 minutos e ficam apenas na memória do navegador. Recarregar a página ou expirar a sessão exige novo login; refresh ainda não foi implementado.
 - O login permite até 10 pedidos por minuto por IP remoto e por processo, com estado limitado a 4096 IPs. O limite também conta logins bem-sucedidos. Um proxy deve aplicar o seu próprio limite; múltiplas instâncias exigem estado partilhado. O backend ignora X-Forwarded-For nesta decisão.
 - As rotas de simulação só são registadas com o perfil `demo`. Nunca activar esse perfil num ambiente com dados reais.
