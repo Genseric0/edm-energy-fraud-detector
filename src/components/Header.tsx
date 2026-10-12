@@ -38,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
             <p className="text-xs text-slate-400">
-              Detecção de ligações clandestinas e desvios de energia • Norma EDM 5% (Maputo)
+              Análise de perdas por transformador • Limiar demonstrativo de 5%
             </p>
           </div>
         </div>
