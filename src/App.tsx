@@ -9,7 +9,7 @@ import { TransformerDetailView } from './components/TransformerDetailView';
 import { energyApi } from './api/energyApi';
 import { ApiError } from './api/client';
 import { TransformerAnalysis, DashboardSummary } from './types/energy';
-import { Loader2, WifiOff, RotateCcw } from 'lucide-react';
+import { Loader2, WifiOff, RotateCcw, Info } from 'lucide-react';
 
 export default function App() {
   return (
@@ -119,6 +119,23 @@ function Dashboard() {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <section role="note" aria-label="Cobertura e limitações" className="rounded-2xl border border-sky-800/60 bg-sky-950/30 p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <Info className="w-5 h-5 text-sky-300 shrink-0 mt-0.5" />
+            <div className="space-y-2">
+              <h2 className="text-sm font-bold text-sky-200">Cobertura e limites da detecção</h2>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                O sistema compara a energia medida no transformador com a energia registada pelos contadores.
+                A fiscalização é mais fiável com contadores acessíveis na rede/postes, telemedição e medições de qualidade.
+                Contadores dentro das residências também integram o balanço do sector, mas identificar um bypass individual
+                pode ser difícil sem sensores adicionais, histórico e inspecção técnica.
+              </p>
+              <p className="text-xs text-sky-200/90">
+                Alertas indicam necessidade de investigação, não provam fraude. Dados e simulações são demonstrativos.
+              </p>
+            </div>
+          </div>
+        </section>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-slate-400">
             <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
