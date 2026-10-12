@@ -1,6 +1,7 @@
 package com.energy.detection.config;
 
 import com.energy.detection.security.JwtAuthFilter;
+import com.energy.detection.security.LoginRateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,6 +46,8 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    @org.springframework.beans.factory.annotation.Value("${EDM_CORS_ORIGIN:http://localhost:3000}")
+    private String corsOrigin;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -115,7 +118,12 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(AbstractHttpConfigurer::disable)
-            .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)) // Permite H2 Console
+            .headers(headers -> headers
+                .frameOptions(HeadersConfigurer.FrameOptionsConfig::deny)
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'none'; frame-ancestors 'none'; base-uri 'none'")))
+            .exceptionHandling(errors -> errors
+                .authenticationEntryPoint((request, response, exception) -> response.sendError(401))
+                .accessDeniedHandler((request, response, exception) -> response.sendError(403)))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Rotas públicas (login e H2 Console, útil para inspecionar dados durante a demo)
@@ -133,6 +141,7 @@ public class SecurityConfig {
 
                 .anyRequest().authenticated()
             )
+            .addFilterBefore(new LoginRateLimitFilter(), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -141,7 +150,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(System.getenv().getOrDefault("EDM_CORS_ORIGIN", "http://localhost:3000")));
+        configuration.setAllowedOrigins(List.of(corsOrigin));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(false);

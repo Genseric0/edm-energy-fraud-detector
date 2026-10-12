@@ -14,20 +14,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const USER_STORAGE_KEY = 'gridaudit_auth_user';
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(() => {
-    try {
-      const saved = localStorage.getItem(USER_STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch {
-      // fallback silencioso: sem sessão anterior válida
-    }
-    return null;
-  });
+  const [user, setUser] = useState<AuthUser | null>(null);
 
   // Ao carregar a aplicação com um token guardado, confirma junto do backend
   // que a sessão ainda é válida (o servidor pode ter reiniciado, ou o token expirado).
@@ -66,16 +54,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    try {
-      if (user) {
-        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
-      } else {
-        localStorage.removeItem(USER_STORAGE_KEY);
-      }
-    } catch {
-      // Ambiente sem localStorage disponível; a sessão não persiste entre recarregamentos.
-    }
-  }, [user]);
+    const expire = () => setUser(null);
+    window.addEventListener('gridaudit-session-expired', expire);
+    return () => window.removeEventListener('gridaudit-session-expired', expire);
+  }, []);
 
   const login = async (username: string, password: string): Promise<{ success: boolean; message: string }> => {
     try {
@@ -106,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       if (err instanceof ApiError) {
         // Erro de rede (status 0): backend provavelmente não está a correr.
-        if (err.status === 0) {
+        if (err.status === 0 || err.status === 429) {
           return { success: false, message: err.message };
         }
         return { success: false, message: 'Credenciais inválidas. Verifique o usuário e a senha.' };

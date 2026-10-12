@@ -6,6 +6,7 @@ import { DashboardSummary, TransformerAnalysis, TransformerDetailResponse, Meter
  * Cada função corresponde diretamente a um método de EnergyController.java.
  */
 export const energyApi = {
+  getCapabilities: () => apiClient.get<{ demoEnabled: boolean }>('/api/energy/capabilities'),
   getSummary: () => apiClient.get<DashboardSummary>('/api/energy/summary'),
 
   getAllTransformers: () => apiClient.get<TransformerAnalysis[]>('/api/energy/transformers'),

@@ -7,31 +7,16 @@
  * - a base URL fica num único sítio (o proxy do Vite trata do resto em dev)
  */
 
-const TOKEN_STORAGE_KEY = 'gridaudit_jwt_token';
+// O token vive apenas em memória. Recarregar a página exige novo login.
+let accessToken: string | null = null;
+try {
+  localStorage.removeItem('gridaudit_jwt_token');
+  localStorage.removeItem('gridaudit_auth_user');
+} catch { /* Armazenamento indisponível. */ }
 
-export function getStoredToken(): string | null {
-  try {
-    return localStorage.getItem(TOKEN_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function setStoredToken(token: string): void {
-  try {
-    localStorage.setItem(TOKEN_STORAGE_KEY, token);
-  } catch {
-    // Ambiente sem localStorage disponível (raro); a sessão simplesmente não persiste.
-  }
-}
-
-export function clearStoredToken(): void {
-  try {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-  } catch {
-    // Nada a fazer.
-  }
-}
+export function getStoredToken(): string | null { return accessToken; }
+export function setStoredToken(token: string): void { accessToken = token; }
+export function clearStoredToken(): void { accessToken = null; }
 
 export class ApiError extends Error {
   status: number;
@@ -81,6 +66,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   if (response.status === 401 && !skipAuth) {
     // Token inválido/expirado ou sem permissão: limpa a sessão local.
     clearStoredToken();
+    window.dispatchEvent(new Event('gridaudit-session-expired'));
     throw new ApiError('Sessão expirada. Faça login novamente.', response.status);
   }
 
