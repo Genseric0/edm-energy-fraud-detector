@@ -19,6 +19,8 @@ public class MeterDTO {
     private String phoneNumber;
     private String address;
     private Double billedKwh;
+    private String installationLocation;
+    private boolean remoteReadingEnabled;
     private Long transformerId;
     private String transformerCode;
 }
