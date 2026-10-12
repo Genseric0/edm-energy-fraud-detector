@@ -32,13 +32,13 @@ public class EnergyAnalysisService {
 
     /**
      * Margem de tolerância para perdas técnicas inerentes à resistência de condutores
-     * e efeito Joule (5.0%) segundo as normas de distribuição da EDM (Electricidade de Moçambique).
-     * Acima de 5%, caracteriza perda não técnica (ligação clandestina / furto de energia).
+     * e efeito Joule (5.0%) como parâmetro demonstrativo, não como norma oficial validada.
+     * Acima do limiar há discrepância a investigar, não prova de fraude.
      */
     public static final double TECHNICAL_LOSS_THRESHOLD_PERCENT = 5.0;
 
     /**
-     * Tarifa média de referência da EDM para cálculo de prejuízo financeiro (7,50 MT por kWh).
+     * Tarifa hipotética de demonstração para cálculo de prejuízo financeiro (7,50 MT por kWh).
      * Moeda oficial: Metical Moçambicano (MZN / MT).
      */
     public static final double AVERAGE_TARIFF_PER_KWH_MT = 7.50;
@@ -165,7 +165,7 @@ public class EnergyAnalysisService {
 
             if (summary.getIsCriticalLoss() && billed < (averageConsumption * 0.5)) {
                 status = "SUSPEITO_BYPASS";
-                description = "Consumo anormalmente baixo (<50% da média) em PT crítico. Suspeita de ligação clandestina / bypass no ramal.";
+                description = "Consumo abaixo da média num sector com discrepância. Necessária verificação técnica; não comprova bypass.";
             } else if (billed > (averageConsumption * 1.8)) {
                 status = "CONSUMO_ELEVADO";
                 description = "Consumo substancialmente superior à média residencial da região.";
