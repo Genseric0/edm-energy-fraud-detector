@@ -66,17 +66,13 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
     }
   }, [transformer.transformerId]);
 
-  useEffect(() => {
-    loadDetail();
-  }, [loadDetail]);
-
   // Sempre que o transformador muda de estado no painel geral (ex: após simular furto
   // ou regularizar), o transformer.transformerId mantém-se igual mas os dados mudam —
   // por isso recarregamos o detalhe também quando o snapshot recebido via props muda.
   useEffect(() => {
     loadDetail();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transformer.suppliedKwh, transformer.totalBilledKwh]);
+  }, [transformer.totalSuppliedKwh, transformer.totalBilledKwh]);
 
   const filteredMeters = useMemo(() => {
     if (!detailed) return [];
