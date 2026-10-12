@@ -83,7 +83,7 @@ jobs:
           sleep 2
           start_backend
           python3 e2e/persistence.py verify
-          npm run dev -- --host 127.0.0.1 > artifacts/frontend.log 2>&1 &
+          npm run dev -- --host localhost > artifacts/frontend.log 2>&1 &
           frontend_pid=$!
           for i in $(seq 1 40); do
             if curl --silent --fail http://127.0.0.1:3000/ > /dev/null; then break; fi
