@@ -60,7 +60,27 @@ jobs:
           with urllib.request.urlopen(req, timeout=15) as response:
               summary = json.load(response)
           assert isinstance(summary, dict) and summary, "Resumo da API vazio"
-          print("Smoke test: login e dashboard OK")
+          transformer_req = urllib.request.Request(base + "/api/energy/transformers", headers={"Authorization": "Bearer " + login["token"]})
+          with urllib.request.urlopen(transformer_req, timeout=15) as response:
+              transformers = json.load(response)
+          assert transformers, "Não foram carregados transformadores"
+          original = transformers[0]
+          tid = original["transformerId"]
+          before = original["totalSuppliedKwh"]
+          payload = json.dumps({"clandestineKwh": 2400}).encode()
+          req = urllib.request.Request(base + f"/api/energy/transformers/{tid}/simulate-theft", data=payload, headers={"Content-Type": "application/json", "Authorization": "Bearer " + login["token"]}, method="POST")
+          with urllib.request.urlopen(req, timeout=15) as response:
+              simulated = json.load(response)
+          assert abs(simulated["totalSuppliedKwh"] - before - 2400) < 0.02, "Simulação não actualizou energia fornecida"
+          req = urllib.request.Request(base + f"/api/energy/transformers/{tid}/normalize", data=b"{}", headers={"Content-Type": "application/json", "Authorization": "Bearer " + login["token"]}, method="POST")
+          with urllib.request.urlopen(req, timeout=15) as response:
+              normalized = json.load(response)
+          assert normalized["lossPercentage"] <= 5.0, "Regularização não reduziu perdas ao limiar esperado"
+          req = urllib.request.Request(base + f"/api/energy/transformers/{tid}/details", headers={"Authorization": "Bearer " + login["token"]})
+          with urllib.request.urlopen(req, timeout=15) as response:
+              details = json.load(response)
+          assert isinstance(details["meters"], list), "Detalhe dos contadores indisponível"
+          print("Smoke test: login, resumo, simulação, regularização e detalhes OK")
           PY
 
   frontend:
