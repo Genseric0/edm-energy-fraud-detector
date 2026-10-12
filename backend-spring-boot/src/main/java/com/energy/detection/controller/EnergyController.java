@@ -19,7 +19,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/energy")
-@CrossOrigin(origins = "*") // Permite chamadas do frontend em Vite / React
 @RequiredArgsConstructor
 public class EnergyController {
 
