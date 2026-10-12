@@ -1,4 +1,5 @@
 export type SectorStatus = 'NORMAL' | 'CRITICAL_ALERT';
+export type MeterLocation = 'POLE' | 'INSIDE_HOME' | 'OUTSIDE_HOME' | 'UNKNOWN';
 
 export interface Meter {
   id: number;
@@ -7,6 +8,8 @@ export interface Meter {
   phoneNumber?: string;
   address: string;
   billedKwh: number;
+  installationLocation?: MeterLocation;
+  remoteReadingEnabled?: boolean;
   transformerId: number;
   transformerCode: string;
 }
@@ -18,6 +21,8 @@ export interface MeterDetail {
   phoneNumber?: string;
   address: string;
   billedKwh: number;
+  installationLocation?: MeterLocation;
+  remoteReadingEnabled?: boolean;
   // Cálculo individualizado da perda (Moçambique - EDM)
   shareOfTotalBilledPercent: number;
   individualLossKwh: number;
