@@ -78,10 +78,14 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     );
   }
 
-  if (response.status === 401 || response.status === 403) {
+  if (response.status === 401 && !skipAuth) {
     // Token inválido/expirado ou sem permissão: limpa a sessão local.
     clearStoredToken();
-    throw new ApiError('Sessão expirada ou sem permissão. Faça login novamente.', response.status);
+    throw new ApiError('Sessão expirada. Faça login novamente.', response.status);
+  }
+
+  if (response.status === 403) {
+    throw new ApiError('Não tem permissão para realizar esta operação.', 403);
   }
 
   if (!response.ok) {
