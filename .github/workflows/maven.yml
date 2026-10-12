@@ -22,6 +22,46 @@ jobs:
           cache-dependency-path: backend-spring-boot/pom.xml
       - name: Compilar e executar testes do backend
         run: mvn -B verify --file backend-spring-boot/pom.xml
+      - name: Testar arranque, login e resumo da API
+        env:
+          EDM_ADMIN_PASSWORD: ci-admin-test-password
+          EDM_OPERATOR_PASSWORD: ci-operator-test-password
+          JWT_SECRET: ci-only-generated-test-key-with-at-least-32-bytes
+        run: |
+          java -jar backend-spring-boot/target/energy-theft-detection-1.0.0.jar > /tmp/edm-backend.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 45); do
+            if curl --silent --fail http://localhost:8080/error >/dev/null; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              cat /tmp/edm-backend.log
+              exit 1
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat /tmp/edm-backend.log
+            exit 1
+          fi
+          python3 - <<'PY'
+          import json
+          import urllib.request
+          base = "http://localhost:8080"
+          data = json.dumps({"username": "genserico", "password": "ci-admin-test-password"}).encode()
+          req = urllib.request.Request(base + "/api/auth/login", data=data, headers={"Content-Type": "application/json"})
+          with urllib.request.urlopen(req, timeout=15) as response:
+              login = json.load(response)
+          assert login["authenticated"] is True and login["token"], "Login não devolveu token"
+          req = urllib.request.Request(base + "/api/energy/summary", headers={"Authorization": "Bearer " + login["token"]})
+          with urllib.request.urlopen(req, timeout=15) as response:
+              summary = json.load(response)
+          assert isinstance(summary, dict) and summary, "Resumo da API vazio"
+          print("Smoke test: login e dashboard OK")
+          PY
 
   frontend:
     runs-on: ubuntu-latest
