@@ -48,8 +48,7 @@ O backend arranca em **http://localhost:8080**, com a base de dados H2 em memór
 populada com 6 transformadores e ~41 medidores de bairros reais de Maputo (Zimpeto,
 Xipamanine, Mafalala, etc.) — ver `DataSeeder.java`.
 
-Podes inspecionar os dados diretamente em **http://localhost:8080/h2-console**
-(JDBC URL: `jdbc:h2:mem:energydb`, user: `sa`, password: em branco).
+A consola H2 está desactivada por defeito; para depuração local, configure `H2_CONSOLE_ENABLED=true` e visite `http://localhost:8080/h2-console` apenas na máquina de desenvolvimento.
 
 ## Como correr — Frontend (React)
 
@@ -65,23 +64,34 @@ O frontend arranca em **http://localhost:3000** (ou a porta seguinte livre, o Vi
 **Importante:** o backend tem de estar a correr primeiro, senão o dashboard mostra o ecrã
 de erro de ligação ("Não foi possível contactar o servidor").
 
-## Credenciais de acesso
+## Configuração segura de acesso
 
-O sistema tem autenticação real (JWT + BCrypt), validada no backend — não há passwords
-visíveis no código-fonte do frontend.
+O backend utiliza JWT e BCrypt. As passwords **não são incluídas no repositório**.
+Antes de iniciar o backend, configure estas variáveis de ambiente:
 
-| Utilizador | Password | Papel |
-|---|---|---|
-| `genserico` | `EdmMz#2026!Adm` | ADMIN |
-| `oxidia` | `EdmMz#2026!Adm` | ADMIN |
-| `leysa` | `EdmMz#2026!Op` | OPERATOR |
-| `helen` | `EdmMz#2026!Op` | OPERATOR |
+| Variável | Finalidade |
+|---|---|
+| `EDM_ADMIN_PASSWORD` | Password dos utilizadores de demonstração com papel ADMIN |
+| `EDM_OPERATOR_PASSWORD` | Password dos utilizadores de demonstração com papel OPERATOR |
+| `JWT_SECRET` | Segredo aleatório com pelo menos 32 bytes para assinatura HS256 |
+| `EDM_CORS_ORIGIN` | Origem permitida do frontend (por defeito `http://localhost:3000`) |
+| `H2_CONSOLE_ENABLED` | `true` somente quando for preciso depurar localmente (por defeito `false`) |
 
-A tela de login tem botões de acesso rápido para cada um destes utilizadores.
+Exemplo em Linux/macOS:
 
-**Diferença entre papéis:**
-- **ADMIN** (Genserico, Oxidia): pode simular ligação clandestina e regularizar setores, além de consultar tudo
-- **OPERATOR** (Leysa, Helen): acesso de consulta a todos os dados e relatórios, sem ações de simulação
+```bash
+export EDM_ADMIN_PASSWORD='defina-uma-password-unica-e-forte'
+export EDM_OPERATOR_PASSWORD='defina-outra-password-unica-e-forte'
+export JWT_SECRET="$(openssl rand -hex 32)"
+cd backend-spring-boot
+mvn spring-boot:run
+```
+
+No PowerShell, defina os mesmos valores em `$env:EDM_ADMIN_PASSWORD`, `$env:EDM_OPERATOR_PASSWORD` e `$env:JWT_SECRET` antes de executar Maven. Não coloque valores reais em ficheiros versionados.
+
+**Utilizadores de demonstração:** `genserico` e `oxidia` (ADMIN), `leysa` e `helen` (OPERATOR). Estes nomes não são contas de produção. O acesso rápido com passwords embutidas foi removido.
+
+As credenciais anteriormente publicadas devem ser consideradas comprometidas e substituídas. Se o sistema já esteve acessível a terceiros, substitua também o segredo JWT e invalide sessões anteriores.
 
 ## Funcionalidades disponíveis
 
