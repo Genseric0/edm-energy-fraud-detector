@@ -61,7 +61,7 @@ Authorization: Bearer {token}
 ```
 
 Utilizadores disponíveis (ver `SecurityConfig.java`): `genserico`, `oxidia` (ADMIN),
-`leysa`, `helen` (OPERATOR). Credenciais completas no `README.md` da raiz.
+`leysa`, `helen` (OPERATOR). As passwords são definidas através de variáveis de ambiente; consultar o `README.md` da raiz.
 
 ## Endpoints REST
 
@@ -79,6 +79,8 @@ Utilizadores disponíveis (ver `SecurityConfig.java`): `genserico`, `oxidia` (AD
 | `POST` | `/api/energy/transformers/{id}/normalize` | Apenas ADMIN | Regulariza o setor |
 
 ## Console do H2 Database
+
+A consola está desligada por defeito. Para depuração local, activar `H2_CONSOLE_ENABLED=true`; não expor em redes públicas.
 
 - **URL:** `http://localhost:8080/h2-console`
 - **JDBC URL:** `jdbc:h2:mem:energydb`
