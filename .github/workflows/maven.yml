@@ -33,7 +33,7 @@ jobs:
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           ready=0
           for attempt in $(seq 1 45); do
-            if curl --silent --fail http://localhost:8080/error >/dev/null; then
+            if curl --silent --max-time 2 --output /dev/null http://localhost:8080/api/auth/me; then
               ready=1
               break
             fi
