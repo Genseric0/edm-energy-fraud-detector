@@ -36,6 +36,17 @@ public class Meter {
     @Column(name = "billed_kwh", nullable = false)
     private Double billedKwh; // Energia consumida e faturada pelo medidor (kWh)
 
+    /** Localização física da instalação; UNKNOWN para cadastros ainda não verificados. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "installation_location", nullable = false)
+    @Builder.Default
+    private MeterLocation installationLocation = MeterLocation.UNKNOWN;
+
+    /** Indica se existem leituras automáticas disponíveis para auditoria. */
+    @Column(name = "remote_reading_enabled", nullable = false)
+    @Builder.Default
+    private boolean remoteReadingEnabled = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transformer_id", nullable = false)
     @JsonBackReference
