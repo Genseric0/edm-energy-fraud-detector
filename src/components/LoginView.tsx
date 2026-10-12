@@ -4,9 +4,8 @@ import {
   Zap,
   Lock,
   User,
-  KeyRound,
+  KeyRound
   AlertCircle,
-  ArrowRight
 } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
@@ -29,18 +28,6 @@ export const LoginView: React.FC = () => {
     const result = await login(username, password);
     setLoading(false);
 
-    if (!result.success) {
-      setError(result.message);
-    }
-  };
-
-  const handleQuickLogin = async (u: string, p: string) => {
-    setUsername(u);
-    setPassword(p);
-    setError(null);
-    setLoading(true);
-    const result = await login(u, p);
-    setLoading(false);
     if (!result.success) {
       setError(result.message);
     }
@@ -94,7 +81,7 @@ export const LoginView: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="genserico, oxidia, leysa ou helen"
+                  placeholder="Nome de utilizador"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500 transition font-mono"
@@ -114,7 +101,7 @@ export const LoginView: React.FC = () => {
                 <input
                   type="password"
                   required
-                  placeholder="Ver credenciais no botão de acesso rápido"
+                  placeholder="Introduza a sua senha"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-700/80 rounded-xl text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-amber-500 transition font-mono"
@@ -139,84 +126,6 @@ export const LoginView: React.FC = () => {
             </button>
           </form>
 
-          {/* Quick Access Profiles */}
-          <div className="mt-6 pt-5 border-t border-slate-800/80 space-y-3">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block text-center">
-              Acesso Rápido para Apresentação
-            </span>
-
-            {/* Admins */}
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-semibold text-amber-400/90 uppercase tracking-wider flex items-center gap-1">
-                👑 Administradores (Senha: EdmMz#2026!Adm)
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('genserico', 'EdmMz#2026!Adm')}
-                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-amber-500/30 hover:border-amber-500/60 text-left transition group cursor-pointer"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-300 group-hover:text-amber-200">
-                      Genserico
-                    </span>
-                    <ArrowRight className="w-3 h-3 text-slate-500 group-hover:text-amber-400 transition" />
-                  </div>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">Admin Geral</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('oxidia', 'EdmMz#2026!Adm')}
-                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-amber-500/30 hover:border-amber-500/60 text-left transition group cursor-pointer"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-amber-300 group-hover:text-amber-200">
-                      Oxidia
-                    </span>
-                    <ArrowRight className="w-3 h-3 text-slate-500 group-hover:text-amber-400 transition" />
-                  </div>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">Admin Geral</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Operators */}
-            <div className="space-y-1.5 pt-1">
-              <span className="text-[10px] font-semibold text-sky-400/90 uppercase tracking-wider flex items-center gap-1">
-                👷 Operadores Técnicos (Senha: EdmMz#2026!Op)
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('leysa', 'EdmMz#2026!Op')}
-                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-700 hover:border-sky-500/50 text-left transition group cursor-pointer"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-200 group-hover:text-sky-300">
-                      Leysa
-                    </span>
-                    <ArrowRight className="w-3 h-3 text-slate-500 group-hover:text-sky-400 transition" />
-                  </div>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">Operadora</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('helen', 'EdmMz#2026!Op')}
-                  className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800/80 border border-slate-700 hover:border-sky-500/50 text-left transition group cursor-pointer"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-200 group-hover:text-sky-300">
-                      Helen
-                    </span>
-                    <ArrowRight className="w-3 h-3 text-slate-500 group-hover:text-sky-400 transition" />
-                  </div>
-                  <span className="text-[10px] text-slate-400 block mt-0.5">Operadora</span>
-                </button>
-              </div>
-            </div>
-          </div>
 
         </div>
 
