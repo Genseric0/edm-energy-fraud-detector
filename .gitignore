@@ -13,3 +13,8 @@ backend-spring-boot/target/
 .idea/
 *.iml
 .mvn/
+
+# Configuracao local e segredos
+.env
+.env.*
+!.env.example
