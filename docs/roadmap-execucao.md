@@ -72,3 +72,17 @@ A preparação das contas em BD depende de um esquema versionado. Este lote inic
 - Métricas observadas em 13/10/2026: 0 estrelas, 0 forks; variação zero. Contribuidores e tráfego não confirmados.
 
 **Pendências:** contas persistentes, bloqueio/refresh/revogação, rotação de segredos, modelo alvo completo, BigDecimal, unicidade de leituras e backup/restauro automatizado. Próximo lote: adicionar utilizadores persistentes através de uma nova migração, com testes de autenticação e persistência. Ambas as fases 0 e 1 permanecem em curso; nada deste lote está integrado em main.
+
+## Quarto lote — 13/10/2026, 20h Maputo
+
+Base dependente: `22e23e4` do PR #4, confirmado aberto e com backend/frontend, PostgreSQL/Playwright e CodeQL aprovados. Os PRs #2–#4 continuam sem merge; este lote também não está integrado em `main`.
+
+- SEC-04: contas migradas da memória para `app_user`, com username único, hash BCrypt, papel, estado, falhas, bloqueio e versão de autenticação persistidos. A migração Flyway V3 não inclui passwords nem dados pessoais.
+- Bootstrap: as quatro contas sintéticas só são criadas numa base vazia; credenciais persistidas não são reescritas no reinício. Continuam obrigatórias passwords distintas de 12+ caracteres e até 72 bytes UTF-8 na primeira instalação.
+- Defesa de login: cinco falhas consecutivas bloqueiam a conta por 15 minutos, com actualização serializada por lock pessimista. A mensagem externa permanece genérica e o limite adicional de 10 tentativas/minuto por IP continua activo.
+- Sessões: JWT inclui `authVersion`; elevar esse valor invalida tokens já emitidos. Cada pedido continua a obter da BD o estado e as permissões actuais, evitando retenção de privilégios.
+- PostgreSQL: teste de migração actualizado para V1→V3 e valida a nova tabela sem perder leituras ou vistorias.
+- QA: testes unitários cobrem bootstrap, hashes/papéis, preservação após reinício, política de password, bloqueio, limpeza após sucesso, conta inexistente, redução de papel, estado da conta e invalidação por versão. A validação integral e a contagem exacta serão registadas no PR após execução da CI.
+- Métricas públicas observadas em 13/10/2026: 0 estrelas e 0 forks, sem alteração; não há dados confirmados de tráfego.
+
+**Pendências:** administração autorizada de contas, rotação de password com incremento de `authVersion`, refresh/revogação por sessão, MFA e SEC-02. A Fase 0 não está concluída. Próximo lote: API administrativa auditável para ciclo de vida de contas e depois refresh/revogação; a Fase 1 mantém BigDecimal, unicidade temporal e backup/restauro pendentes.

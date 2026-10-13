@@ -116,12 +116,11 @@ As credenciais anteriormente publicadas devem ser consideradas comprometidas e s
   endpoint no backend (`POST /api/energy/transformers` e `POST /api/energy/transformers/{id}/meters`
   não existem em `EnergyController.java`). Os formulários correspondentes foram removidos
   do frontend por esse motivo, para não simular funcionalidade que não persiste.
-- Base de dados em memória (H2): os dados voltam ao estado inicial (`DataSeeder.java`)
-  sempre que o backend reinicia. Para persistência real, migrar para MySQL/PostgreSQL
-  (mudar `spring.datasource.url` e o driver em `application.properties`/`pom.xml`).
-- Utilizadores geridos em memória no `SecurityConfig.java` — numa evolução futura,
-  passariam para uma tabela `utilizador` própria, com hashing feito no cadastro em vez
-  de fixo no arranque.
+- No perfil H2 os dados voltam ao estado inicial (`DataSeeder.java`) quando o backend
+  reinicia. O perfil PostgreSQL mantém dados e contas entre reinícios.
+- As contas iniciais são criadas com hash BCrypt em `app_user` apenas quando a tabela
+  está vazia; reinícios não reescrevem credenciais. As passwords do primeiro arranque
+  devem vir de um cofre de segredos em produção.
 
 ## Stack técnica
 
@@ -155,12 +154,12 @@ O H2 continua a ser o perfil de demonstração por defeito. Para guardar os dado
 
 A configuração está em `application-postgres.properties`. Os dados ficam no volume Docker `gridaudit_pgdata`, que sobrevive a `docker compose down` (mas **não** a `docker compose down -v`).
 
-**Migrações:** PostgreSQL usa Flyway V1/V2 e `hibernate.ddl-auto=validate`. Bases antigas não vazias e sem histórico Flyway são recusadas; é necessária adopção revista numa cópia restaurada, conforme [runbook](docs/runbooks/postgres-migrations.md). Nunca activar baseline automático para contornar esse erro. Contas e dados demonstrativos do DataSeeder não são dados reais de clientes EDM.
+**Migrações:** PostgreSQL usa Flyway V1–V3 e `hibernate.ddl-auto=validate`. Bases antigas não vazias e sem histórico Flyway são recusadas; é necessária adopção revista numa cópia restaurada, conforme [runbook](docs/runbooks/postgres-migrations.md). Nunca activar baseline automático para contornar esse erro. Contas e dados demonstrativos do DataSeeder não são dados reais de clientes EDM.
 
 ## Roadmap e segurança
 
 O [roadmap de conclusão](ROADMAP.md) define as fases restantes. Consultar o [registo de execução](docs/roadmap-execucao.md) para distinguir o que foi implementado das pendências e o [SECURITY.md](SECURITY.md) para os limites do protótipo.
 
-Os comandos de simulação exigem agora o perfil `demo`; nunca o activar com dados reais. A sessão do navegador não é persistida: recarregar a página ou expirar o token (15 minutos) exige novo login. O login está limitado a 10 pedidos/minuto por IP e por instância.
+Os comandos de simulação exigem agora o perfil `demo`; nunca o activar com dados reais. A sessão do navegador não é persistida: recarregar a página ou expirar o token (15 minutos) exige novo login. O login está limitado a 10 pedidos/minuto por IP e por instância; cinco falhas consecutivas bloqueiam a conta durante 15 minutos. Alterar `auth_version` invalida imediatamente os tokens anteriores da conta.
 
 Para contribuir, consulte [CONTRIBUTING.md](CONTRIBUTING.md) (português / English).

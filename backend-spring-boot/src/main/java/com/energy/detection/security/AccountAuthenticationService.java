@@ -1,0 +1,45 @@
+package com.energy.detection.security;
+
+import com.energy.detection.repository.AppUserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Locale;
+
+/** Estado persistente de tentativas por conta, complementar ao limite por IP. */
+@Service
+@RequiredArgsConstructor
+public class AccountAuthenticationService {
+    static final int MAX_FAILURES = 5;
+    static final Duration LOCK_DURATION = Duration.ofMinutes(15);
+
+    private final AppUserRepository users;
+    private final Clock clock;
+
+    @Transactional
+    public void recordFailure(String username) {
+        users.findByUsernameForUpdate(normalize(username)).ifPresent(account -> {
+            Instant now = clock.instant();
+            if (!account.isActive() || account.getLockedUntil() != null && account.getLockedUntil().isAfter(now)) return;
+            int attempts = account.getFailedAttempts() + 1;
+            account.setFailedAttempts(attempts);
+            if (attempts >= MAX_FAILURES) account.setLockedUntil(now.plus(LOCK_DURATION));
+        });
+    }
+
+    @Transactional
+    public void recordSuccess(String username) {
+        users.findByUsernameForUpdate(normalize(username)).ifPresent(account -> {
+            account.setFailedAttempts(0);
+            account.setLockedUntil(null);
+        });
+    }
+
+    private String normalize(String username) {
+        return username == null ? "" : username.trim().toLowerCase(Locale.ROOT);
+    }
+}
