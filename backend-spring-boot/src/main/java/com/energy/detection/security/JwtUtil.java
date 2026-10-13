@@ -51,6 +51,8 @@ public class JwtUtil {
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .claim("authorities", authorities)
+                .claim("authVersion", userDetails instanceof VersionedUserDetails versioned
+                        ? versioned.getAuthVersion() : 0L)
                 .issuedAt(agora)
                 .expiration(expiracao)
                 .signWith(secretKey)
@@ -69,15 +71,17 @@ public class JwtUtil {
 
     public boolean tokenValido(String token, UserDetails userDetails) {
         try {
-            String username = extrairUsername(token);
-            return username.equals(userDetails.getUsername()) && !tokenExpirado(token);
+            Claims claims = parseClaims(token);
+            Number versionClaim = claims.get("authVersion", Number.class);
+            long tokenVersion = versionClaim == null ? 0 : versionClaim.longValue();
+            long currentVersion = userDetails instanceof VersionedUserDetails versioned
+                    ? versioned.getAuthVersion() : 0L;
+            return claims.getSubject().equals(userDetails.getUsername())
+                    && tokenVersion == currentVersion
+                    && !claims.getExpiration().before(new Date());
         } catch (Exception e) {
             return false;
         }
-    }
-
-    private boolean tokenExpirado(String token) {
-        return parseClaims(token).getExpiration().before(new Date());
     }
 
     private Claims parseClaims(String token) {

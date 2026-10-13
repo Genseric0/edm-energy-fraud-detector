@@ -2,6 +2,8 @@ package com.energy.detection.controller;
 
 import com.energy.detection.dto.LoginRequestDTO;
 import com.energy.detection.dto.LoginResponseDTO;
+import com.energy.detection.model.AppUser;
+import com.energy.detection.security.AccountAuthenticationService;
 import com.energy.detection.security.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +14,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -32,18 +32,7 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-
-    /**
-     * Nomes de exibição amigáveis para os utilizadores cadastrados.
-     * Mantido aqui (e não no SecurityConfig) para não misturar dados de autenticação
-     * com dados de apresentação.
-     */
-    private static final Map<String, String> NOMES_EXIBICAO = Map.of(
-            "genserico", "Genserico",
-            "oxidia", "Oxidia",
-            "leysa", "Leysa",
-            "helen", "Helen"
-    );
+    private final AccountAuthenticationService accountAuthentication;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO request) {
@@ -59,13 +48,11 @@ public class AuthController {
             boolean isAdmin = authorities.contains("ROLE_ADMIN");
             String role = isAdmin ? "ROLE_ADMIN" : "ROLE_OPERATOR";
             String username = authentication.getName();
-            String displayName = NOMES_EXIBICAO.getOrDefault(username, username);
+            accountAuthentication.recordSuccess(username);
 
-            UserDetails userDetails = User.builder()
-                    .username(username)
-                    .password("")
-                    .authorities(authentication.getAuthorities())
-                    .build();
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            String displayName = userDetails instanceof AppUser account
+                    ? account.getDisplayName() : username;
             String token = jwtUtil.gerarToken(userDetails);
 
             LoginResponseDTO response = LoginResponseDTO.builder()
@@ -81,6 +68,7 @@ public class AuthController {
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException ex) {
+            accountAuthentication.recordFailure(request.getUsername());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                     LoginResponseDTO.builder()
                             .authenticated(false)
@@ -102,7 +90,8 @@ public class AuthController {
 
         boolean isAdmin = authorities.contains("ROLE_ADMIN");
         String username = authentication.getName();
-        String displayName = NOMES_EXIBICAO.getOrDefault(username, username);
+        String displayName = authentication.getPrincipal() instanceof AppUser account
+                ? account.getDisplayName() : username;
 
         return ResponseEntity.ok(
                 LoginResponseDTO.builder()
