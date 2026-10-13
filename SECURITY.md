@@ -14,7 +14,7 @@ Contactar o mantenedor por um canal privado previamente combinado. Se estiver di
 - O login permite até 10 pedidos por minuto por IP remoto e por processo, com estado limitado a 4096 IPs. O limite também conta logins bem-sucedidos. Um proxy deve aplicar o seu próprio limite; múltiplas instâncias exigem estado partilhado. O backend ignora X-Forwarded-For nesta decisão.
 - As rotas de simulação só são registadas com o perfil `demo`. Nunca activar esse perfil num ambiente com dados reais.
 - Os cabeçalhos DENY/CSP configurados no backend protegem a API. O servidor que alojar o frontend deve ter a sua própria política CSP, compatível com os recursos efectivamente utilizados.
-- As permissões por área, segregação de funções, migrações Flyway e auditoria imutável ainda não estão completas.
+- PostgreSQL usa Flyway V1/V2 e Hibernate validate para as tabelas actuais. O modelo alvo completo, permissões por área, segregação de funções e auditoria imutável ainda não estão completos. Bases antigas exigem adopção específica; baseline automático e clean estão desactivados.
 - A versão de Spring Boot existente ainda precisa de actualização e testes de regressão.
 
 ## Segredos e histórico
