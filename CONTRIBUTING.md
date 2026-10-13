@@ -5,7 +5,7 @@
 O GridAudit é um protótipo independente para estudar discrepâncias de energia. Um alerta é um indício para investigação técnica, não prova de fraude. Não usar dados pessoais reais em exemplos, testes, screenshots ou issues.
 
 1. Leia o [README](README.md), [ROADMAP](ROADMAP.md), [progresso](docs/roadmap-execucao.md) e [SECURITY](SECURITY.md).
-2. Use Java 17, Maven, Node.js 20 e Docker para os testes PostgreSQL/Testcontainers. Configure as quatro passwords individuais e JWT_SECRET conforme o README. O protótipo ainda usa contas fixas em memória; PostgreSQL não torna essas contas persistentes.
+2. Use Java 17, Maven, Node.js 20 e Docker para os testes PostgreSQL/Testcontainers. Configure as quatro passwords individuais e JWT_SECRET conforme o README. Numa instalação vazia, essas credenciais criam as contas iniciais persistentes; não são reaplicadas após o primeiro arranque.
 3. Crie uma branch por melhoria. Explique o problema, o comportamento pretendido e os limites da alteração.
 4. Execute `mvn -B verify -f backend-spring-boot/pom.xml`, `npm ci` e `npm run build`. O último comando verifica TypeScript e compila a interface.
 5. Abra um PR com os ficheiros afectados, resultados dos testes e screenshots quando alterar a interface. Informe testes que não conseguiu executar.
@@ -20,7 +20,7 @@ Contribuições iniciais úteis: corrigir instruções que não funcionam, melho
 GridAudit is an independent prototype for investigating energy discrepancies. An alert is an indication for technical investigation, not proof of fraud. Use synthetic data only in examples, tests, screenshots and issues.
 
 - Read README, ROADMAP, the progress log and SECURITY before making changes.
-- Use Java 17, Maven, Node.js 20 and Docker for PostgreSQL/Testcontainers tests. Set the four distinct per-account passwords and JWT_SECRET documented in README. Accounts are still held in memory, including when PostgreSQL is enabled.
+- Use Java 17, Maven, Node.js 20 and Docker for PostgreSQL/Testcontainers tests. Set the four distinct per-account passwords and JWT_SECRET documented in README. On an empty installation these credentials create the initial persistent accounts; they are not reapplied after first start.
 - Work on a focused branch. Run `mvn -B verify -f backend-spring-boot/pom.xml`, `npm ci` and `npm run build`.
 - Describe the problem, changed behaviour, limitations and actual test results in the PR. Include screenshots for UI changes and disclose checks you could not run.
 - Require green CI and human review before merging. Clearly identify dependent PRs and avoid duplicate work.
