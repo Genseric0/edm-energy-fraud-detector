@@ -55,3 +55,20 @@ Base: `533dd567` do PR #2, ainda aberto e com os três workflows aprovados no in
 - Validação: resultados concretos da CI serão registados no PR deste lote; não confundir testes adicionados com testes aprovados.
 
 **Próximo passo:** migrar contas para BD com esquema versionado, bloqueio persistente e administração autorizada; depois refresh e revogação por sessão. SEC-02 continua dependente de rotação externa e limpeza coordenada do histórico. O PR #2 precisa de revisão humana; o segundo lote deve ser revisto sobre essa base e retargetado após integração. A Fase 0 não está concluída.
+
+
+## Terceiro lote — 13/10/2026
+
+O PR #3 (`8944eb7`) foi confirmado com 35 testes aprovados e CI backend/frontend, PostgreSQL/Playwright e CodeQL com sucesso. Foi marcado pronto para revisão; #2 e #3 continuam sem merge.
+
+A preparação das contas em BD depende de um esquema versionado. Este lote inicia DB-01 da Fase 1 como pré-requisito de SEC-04, sem declarar a Fase 0 concluída:
+
+- V1 descreve as quatro tabelas existentes sem conversão silenciosa dos valores de energia; V2 adiciona índices por FK/data.
+- PostgreSQL passa de `ddl-auto=update` para `validate`; Flyway aplica e verifica migrações. Baseline automático e clean desactivados.
+- H2 fica explicitamente efémero (`create-drop`), separado da validação de PostgreSQL.
+- Testcontainers usa PostgreSQL 16 real: migração limpa, repetição, evolução incremental com preservação de leituras/vistorias/IDs e recusa de esquema legado sem perda do registo de controlo. Não há skip automático por ausência de Docker.
+- Runbook em `docs/runbooks/postgres-migrations.md` documenta instalação nova e tratamento de bases antigas; não foi alterada nenhuma base do utilizador.
+- Branch `feat/postgres-flyway` depende de `fix/individual-credentials` (#3). Validação do novo lote e link do PR ficam na descrição desse PR.
+- Métricas observadas em 13/10/2026: 0 estrelas, 0 forks; variação zero. Contribuidores e tráfego não confirmados.
+
+**Pendências:** contas persistentes, bloqueio/refresh/revogação, rotação de segredos, modelo alvo completo, BigDecimal, unicidade de leituras e backup/restauro automatizado. Próximo lote: adicionar utilizadores persistentes através de uma nova migração, com testes de autenticação e persistência. Ambas as fases 0 e 1 permanecem em curso; nada deste lote está integrado em main.
