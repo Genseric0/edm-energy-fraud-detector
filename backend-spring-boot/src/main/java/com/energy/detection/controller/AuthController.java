@@ -14,7 +14,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,18 +40,15 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
             );
 
-            List<String> authorities = authentication.getAuthorities().stream()
+            AppUser userDetails = accountAuthentication.recordSuccess((AppUser) authentication.getPrincipal());
+            List<String> authorities = userDetails.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList());
 
             boolean isAdmin = authorities.contains("ROLE_ADMIN");
             String role = isAdmin ? "ROLE_ADMIN" : "ROLE_OPERATOR";
-            String username = authentication.getName();
-            accountAuthentication.recordSuccess(username);
-
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String displayName = userDetails instanceof AppUser account
-                    ? account.getDisplayName() : username;
+            String username = userDetails.getUsername();
+            String displayName = userDetails.getDisplayName();
             String token = jwtUtil.gerarToken(userDetails);
 
             LoginResponseDTO response = LoginResponseDTO.builder()

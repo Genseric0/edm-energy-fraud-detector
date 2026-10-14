@@ -1,7 +1,19 @@
-# Execução do roadmap — primeiro lote da Fase 0
+# Execução do roadmap — Fase 0 em curso
 
 Base revista: `231fd0de60dfbe9e84ae7f4602c40d5b7631ec30`, em 12/10/2026.
 O [ROADMAP.md](../ROADMAP.md) preserva o plano recebido; caixas por marcar não significam funcionalidades já entregues.
+
+## Quinto lote — 14/10/2026
+
+- Estado verificado: PRs #2–#5 abertos, sem merge; HEAD do #5 `310fb95` com os três workflows aprovados. Main permanece `231fd0d`.
+- Branch dependente `fix/account-lock-races`, base `feat/persistent-users` (#5). Fases 0/5: correcção de segurança descoberta antes de adicionar administração de contas.
+- `AccountAuthenticationService`: sucesso revalida sob lock estado, identidade, hash e authVersion. Um login em curso não pode limpar um bloqueio aplicado entretanto. Bloqueios expirados iniciam nova janela de falhas; pedidos durante bloqueio não o prolongam.
+- `AuthController`: token e resposta usam a conta revalidada, incluindo papel actual. `application.properties`: Open EntityManager in View desactivado também em H2 para não reutilizar estado de autenticação antigo entre transacções; PostgreSQL já tinha esta configuração.
+- `AccountAuthenticationServiceTest`: regressões determinísticas de bloqueio, expiração exacta, alteração de password/versão/papel, desactivação, remoção e recriação. `AccountPersistenceTest`: PostgreSQL 16 real, cinco falhas concorrentes sem perda de incrementos, login antigo versus bloqueio confirmado e recuperação persistida.
+- Validação: `git diff --check` aprovado; Maven indisponível localmente. No commit funcional `b16e8f3` do [PR #6](https://github.com/Genseric0/edm-energy-fraud-detector/pull/6), a [CI backend/frontend](https://github.com/Genseric0/edm-energy-fraud-detector/actions/runs/38509254732) aprovou 53 testes, zero falhas/erros/ignorados, build e smoke test. [Visual/PostgreSQL](https://github.com/Genseric0/edm-energy-fraud-detector/actions/runs/38509254507) e [CodeQL](https://github.com/Genseric0/edm-energy-fraud-detector/actions/runs/38509254500) também aprovados. Os checks de commits posteriores continuam obrigatórios.
+- Apresentação: [notas bilingues](releases/2026-10-14-auth-locks.md), sem alegações de produção ou capturas de funcionalidades inexistentes. Não houve divulgação externa.
+- Métricas de 14/10/2026: 0 estrelas, 0 forks (variação zero). Endpoint de contribuidores indisponível pelo conector; tráfego não medido.
+- Próximo passo: administração auditável e rotação de password, seguida de refresh/revogação. SEC-02 depende de acção externa coordenada; licença exige decisão do titular. A Fase 0 não está concluída; não foi feito merge ou escrita directa em main.
 
 ## Alterações neste lote
 
