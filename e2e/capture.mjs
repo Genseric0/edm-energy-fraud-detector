@@ -51,11 +51,11 @@ try {
   await page.screenshot({ path: 'artifacts/screenshots/03-dashboard-mobile.png', fullPage: true });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole('button', { name: 'Medidores', exact: true }).first().click();
-  await page.getByRole('button', { name: /PDF/ }).waitFor({ timeout: 30000 });
+  await page.locator('#btn-export-audit-pdf').waitFor({ timeout: 30000 });
   assert.equal(await page.locator('button[title^="Simular"]').count(), 0);
   await page.screenshot({ path: 'artifacts/screenshots/04-transformer-detail.png', fullPage: true });
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: /PDF/ }).click();
+  await page.locator('#btn-export-audit-pdf').click();
   const download = await downloadPromise;
   assert.match(download.suggestedFilename(), /^GridAudit_Demonstracao_.*\.pdf$/);
   await download.saveAs('artifacts/demo-report.pdf');
