@@ -26,13 +26,13 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
-  doc.text('ELECTRICIDADE DE MOÇAMBIQUE, E.P. (EDM)', 14, 12);
+  doc.text('GridAudit', 14, 12);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(203, 213, 225);
-  doc.text('Direcção de Distribuição e Auditoria de Perdas Não Técnicas • Região Maputo', 14, 18);
-  doc.text('Relatório Oficial de Inspecção Técnica & Balanço de Energia', 14, 23);
+  doc.text('Projecto independente, sem afiliação à EDM', 14, 18);
+  doc.text('Demonstração com dados sintéticos. Não é relatório oficial.', 14, 23);
 
   // Status Stamp on Top Right
   const emissionDate = new Date().toLocaleDateString('pt-MZ', {
@@ -47,7 +47,7 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
   doc.setTextColor(148, 163, 184);
   doc.text(`Emissão: ${emissionDate}`, 196, 12, { align: 'right' });
   doc.text(`Protocolo: AUD-${detail.transformerCode.replace(/[^a-zA-Z0-9]/g, '')}-${Date.now().toString().slice(-4)}`, 196, 17, { align: 'right' });
-  doc.text('Classificação: CONFIDENCIAL / USO INTERNO', 196, 22, { align: 'right' });
+  doc.text('DEMONSTRAÇÃO / SEM COBRANÇA', 196, 27, { align: 'right' });
 
   // Section 1: Posto de Transformação Info
   let currentY = 38;
@@ -146,7 +146,7 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
   doc.text(`${detail.lossKwh.toLocaleString('pt-MZ')} kWh`, card1X + 4, currentY + 13);
   doc.setFontSize(7);
   doc.setTextColor(100, 116, 139);
-  doc.text(`Meta Técnica: ≤ ${TECHNICAL_LOSS_THRESHOLD.toFixed(1)}%`, card1X + 4, currentY + 18);
+  doc.text(`Limiar demo: ${TECHNICAL_LOSS_THRESHOLD.toFixed(1)}%`, card1X + 4, currentY + 18);
 
   // Card 2: Percentual de Perda
   const card2X = card1X + cardWidth + cardGap;
@@ -162,7 +162,7 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
   doc.setTextColor(isCritical ? 185 : 13, isCritical ? 28 : 148, isCritical ? 28 : 136);
   doc.text(`${detail.lossPercentage.toFixed(2)}%`, card2X + 4, currentY + 13);
   doc.setFontSize(7);
-  doc.text(isCritical ? 'CRÍTICO (Excede limite)' : 'CONFORME (Técnico)', card2X + 4, currentY + 18);
+  doc.text(isCritical ? 'Acima do limiar demo' : 'Abaixo do limiar demo', card2X + 4, currentY + 18);
 
   // Card 3: Prejuízo Financeiro Estimado
   const card3X = card2X + cardWidth + cardGap;
@@ -180,7 +180,7 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
   doc.text(`${totalFinancialLossMt.toLocaleString('pt-MZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} MT`, card3X + 4, currentY + 13);
   doc.setFontSize(7);
   doc.setTextColor(133, 77, 14);
-  doc.text(`Tarifa Ref.: ${AVERAGE_TARIFF_MZN.toFixed(2)} MT/kWh`, card3X + 4, currentY + 18);
+  doc.text(`Valor demo: ${AVERAGE_TARIFF_MZN.toFixed(2)} MT/kWh`, card3X + 4, currentY + 18);
 
   currentY += cardHeight + 8;
 
@@ -192,8 +192,8 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
   doc.setFontSize(8);
   doc.setTextColor(isCritical ? 153 : 19, isCritical ? 27 : 78, isCritical ? 27 : 74);
   const statusMsg = isCritical
-    ? `PARECER TÉCNICO: ALERTA CRÍTICO DE PERDAS NÃO TÉCNICAS. O índice de perdas (${detail.lossPercentage.toFixed(2)}%) excede a margem de tolerância da EDM de 5,0%. Recomendada intervenção imediata da brigada de fiscalização.`
-    : `PARECER TÉCNICO: OPERAÇÃO EM CONFORMIDADE. O índice de perdas (${detail.lossPercentage.toFixed(2)}%) encontra-se abaixo do teto regulamentar de 5,0%. Setor sem indícios de ligações clandestinas generalizadas.`;
+    ? 'ALERTA DEMONSTRATIVO: exige investigação. Estimativas não provam fraude nem autorizam multas.'
+    : 'ABAIXO DO LIMIAR DEMONSTRATIVO: não comprova conformidade nem ausência de irregularidades.';
   doc.text(statusMsg, 16, currentY + 7, { maxWidth: 178 });
 
   currentY += 16;
@@ -230,7 +230,7 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
 
   autoTable(doc, {
     startY: currentY + 4,
-    head: [['Nº Medidor', 'Consumidor', 'Endereço', 'Faturado', 'Perda Pro-rata', 'Prejuízo', 'Status']],
+    head: [['Nº Medidor', 'Consumidor sintético', 'Endereço sintético', 'Faturado', 'Estimativa pro-rata', 'Valor demo', 'Triagem']],
     body: tableData,
     theme: 'grid',
     styles: {
@@ -250,7 +250,7 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
     },
     columnStyles: {
       0: { fontStyle: 'bold', cellWidth: 24 },
-      1: { cellWidth: 38 },
+      1: { cellWidth: 36 },
       2: { cellWidth: 42 },
       3: { halign: 'right', cellWidth: 20 },
       4: { halign: 'right', cellWidth: 22 },
@@ -287,7 +287,7 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(71, 85, 105);
-  doc.text('4. VALIDAÇÃO TÉCNICA E TERMO DE AUDITORIA', 14, finalY);
+  doc.text('4. REVISÃO DA DEMONSTRAÇÃO (SEM VALOR OFICIAL)', 14, finalY);
 
   finalY += 4;
   doc.setDrawColor(226, 232, 240);
@@ -307,14 +307,14 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(30, 41, 59);
-  doc.text('Engenheiro / Auditor Técnico Responsável', sig1X + sigWidth / 2, finalY + 4, { align: 'center' });
-  doc.text('Chefe da Brigada de Fiscalização EDM', sig2X + sigWidth / 2, finalY + 4, { align: 'center' });
+  doc.text('Autor da demonstração', sig1X + sigWidth / 2, finalY + 4, { align: 'center' });
+  doc.text('Revisor da demonstração', sig2X + sigWidth / 2, finalY + 4, { align: 'center' });
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(100, 116, 139);
-  doc.text('Registo Profissional Ordem dos Engenheiros (OrdEM)', sig1X + sigWidth / 2, finalY + 8, { align: 'center' });
-  doc.text('Electricidade de Moçambique - Direcção Regional Maputo', sig2X + sigWidth / 2, finalY + 8, { align: 'center' });
+  doc.text('Estimativas exigem verificação técnica.', sig1X + sigWidth / 2, finalY + 8, { align: 'center' });
+  doc.text('Sem multas ou cobranças automáticas.', sig2X + sigWidth / 2, finalY + 8, { align: 'center' });
 
   // Page Numbers
   const pageCount = doc.getNumberOfPages();
@@ -323,7 +323,7 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
     doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184);
     doc.text(
-      `EDM - Auditoria Técnica • PT: ${detail.transformerCode} • Página ${i} de ${pageCount}`,
+      `GridAudit • Independente da EDM • Dados sintéticos • Página ${i} de ${pageCount}`,
       105,
       290,
       { align: 'center' }
@@ -332,5 +332,5 @@ export const generateAuditPdf = (detail: TransformerDetailResponse) => {
 
   // Save the PDF
   const sanitizedCode = detail.transformerCode.replace(/[^a-zA-Z0-9_-]/g, '_');
-  doc.save(`Relatorio_Auditoria_EDM_${sanitizedCode}.pdf`);
+  doc.save(`GridAudit_Demonstracao_${sanitizedCode}.pdf`);
 };

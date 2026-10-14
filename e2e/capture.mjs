@@ -6,8 +6,9 @@ const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
 await mkdir('artifacts/screenshots', { recursive: true });
 try {
+  const pageErrors = [];
   page.on('console', msg => { if (msg.type() === 'error') console.error('Browser console:', msg.text()); });
-  page.on('pageerror', error => console.error('Browser exception:', error.message));
+  page.on('pageerror', error => pageErrors.push(error.message));
   await page.goto('http://127.0.0.1:3000', { waitUntil: 'networkidle' });
   await page.getByText('Auditoria Energética', { exact: true }).waitFor();
   await page.screenshot({ path: 'artifacts/screenshots/01-login.png', fullPage: true });
@@ -26,6 +27,13 @@ try {
     throw error;
   }
   await page.getByText('Total Fornecido').waitFor({ timeout: 30000 });
+  await page.getByText('Projecto independente, sem afiliação à EDM', { exact: false }).waitFor();
+  const capabilities = await page.request.get('http://127.0.0.1:3000/api/energy/capabilities', {
+    headers: { Authorization: 'Bearer ' + token },
+  });
+  assert.equal((await capabilities.json()).demoEnabled, false);
+  assert.equal(await page.locator('button[title^="Simular"]').count(), 0,
+    'A tabela não deve oferecer simulação fora do perfil demo');
   await page.screenshot({ path: 'artifacts/screenshots/02-dashboard.png', fullPage: true });
 
   assert.equal(await page.evaluate(() => localStorage.getItem('gridaudit_jwt_token')), null, 'Token não deve persistir no browser');
@@ -41,6 +49,17 @@ try {
   assert.ok((await transformers.json()).length > 0, 'Não existem transformadores de demonstração');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: 'artifacts/screenshots/03-dashboard-mobile.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.getByRole('button', { name: 'Medidores', exact: true }).first().click();
+  await page.getByRole('button', { name: /PDF/ }).waitFor({ timeout: 30000 });
+  assert.equal(await page.locator('button[title^="Simular"]').count(), 0);
+  await page.screenshot({ path: 'artifacts/screenshots/04-transformer-detail.png', fullPage: true });
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: /PDF/ }).click();
+  const download = await downloadPromise;
+  assert.match(download.suggestedFilename(), /^GridAudit_Demonstracao_.*\.pdf$/);
+  await download.saveAs('artifacts/demo-report.pdf');
+  assert.deepEqual(pageErrors, [], 'Excepções JavaScript na interface');
   console.log('Login, dashboard e dados de transformadores verificados.');
 } finally {
   await browser.close();

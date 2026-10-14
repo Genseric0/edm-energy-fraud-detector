@@ -64,7 +64,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary }) => {
           <span className="text-emerald-400 font-medium">
             {summary.totalSuppliedKwh > 0 
               ? `${((summary.totalBilledKwh / summary.totalSuppliedKwh) * 100).toFixed(1)}%` 
-              : '0%'} Pago
+              : '0%'} Faturado
           </span>
         </div>
       </div>
@@ -97,7 +97,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary }) => {
             {summary.overallLossPercentage.toFixed(1)}% perda global
           </span>
           <span className="text-xs text-slate-400">
-            Limite: 5.0%
+            Limiar demo: 5.0%
           </span>
         </div>
       </div>

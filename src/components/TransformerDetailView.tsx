@@ -179,7 +179,7 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
             disabled={isGeneratingPdf}
             id="btn-export-audit-pdf"
             className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer disabled:opacity-50"
-            title="Gerar e descarregar relatório em PDF formatado para auditoria técnica da EDM"
+            title="Descarregar relatório demonstrativo GridAudit, sem afiliação à EDM"
           >
             {isGeneratingPdf ? (
               <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -578,7 +578,7 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
           <div className="space-y-0.5 text-[11px] leading-relaxed">
             <span className="font-bold text-white">Metodologia do Cálculo Individualizado de Perdas:</span>
             <p>
-              A perda individual de cada ramal residencial é alocada via balanço pro-rata ponderado: <code className="text-amber-300 font-mono">Perda_Indiv = Perda_Total × (Consumo_Medidor / Soma_Total)</code>, valorizada na tarifa de referência EDM de {AVERAGE_TARIFF_MZN.toFixed(2)} MT/kWh. Residências em circuitos com perda &gt; 5% cujo consumo fique abaixo de 50% da média histórica do posto são categorizadas como <strong>Suspeita de Bypass/Gato</strong> para fiscalização em campo.
+              A estimativa por contador é uma alocação pro-rata: <code className="text-amber-300 font-mono">Estimativa = Perda_Total × (Consumo_Medidor / Soma_Total)</code>. Não mede energia desviada individualmente nem comprova fraude. O valor de {AVERAGE_TARIFF_MZN.toFixed(2)} MT/kWh e o limiar de 5% são demonstrativos, sem validação oficial; não geram multas. A classificação de suspeita exige confirmação técnica independente.
             </p>
           </div>
         </div>
