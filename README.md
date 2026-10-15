@@ -1,14 +1,30 @@
-# GridAudit EDM — Sistema de Detecção de Perdas Não Técnicas e Ligações Clandestinas
+# GridAudit — Auditoria de discrepâncias de energia
 
-Sistema de auditoria energética para a Electricidade de Moçambique (EDM), focado na
-identificação de **Perdas Não Técnicas (PNT)** — roubo de energia através de ligações
-clandestinas ("gatos") e adulteração de contadores.
+Projecto independente, sem afiliação à EDM. Protótipo full-stack para comparar energia
+fornecida e faturada por transformador, organizar indícios e apoiar investigação técnica.
+Um alerta não comprova fraude. Não aplica multas. A demonstração usa dados sintéticos;
+5% e 7,50 MT/kWh são parâmetros demonstrativos, sem validação oficial.
 
-**Metodologia:** balanço energético por transformador. Para cada posto de transformação (PT),
-o sistema compara a energia efetivamente **fornecida** (medida no secundário do transformador)
-com a soma da energia **faturada** pelos medidores residenciais a jusante. Uma discrepância
-acima do limiar técnico de **5%** (norma EDM) é sinalizada como Alerta Crítico — indício de
-ligação clandestina no circuito.
+**Para recrutadores:** [tour da interface e evidência técnica](docs/SHOWCASE.md) ·
+[contribuir](CONTRIBUTING.md) · [progresso e limites](docs/roadmap-execucao.md).
+
+Competências demonstradas: React/TypeScript, API Java/Spring, autenticação JWT/RBAC,
+PostgreSQL/Flyway, testes concorrentes com Testcontainers e E2E com Playwright.
+As melhorias desta branch estão propostas em PRs dependentes; não estão integradas em
+`main`. O roadmap completo e a prontidão para produção permanecem em desenvolvimento.
+
+![Dashboard desktop com dados sintéticos](docs/screenshots/02-dashboard.png)
+
+## English overview
+
+Independent full-stack energy-discrepancy auditing prototype, not affiliated with EDM.
+It compares supplied and billed energy per transformer, displays readings and preliminary
+inspection records through the API, and offers a browser dashboard and demonstration PDF.
+Alerts are indicators requiring technical investigation, not proof of fraud. No automatic fines.
+All showcase data is synthetic; thresholds and monetary values are illustrative.
+
+Explore the [screenshots and engineering evidence](docs/SHOWCASE.md). This branch contains
+proposed changes awaiting human review; it is not a production-readiness claim.
 
 ## Arquitetura
 
@@ -25,10 +41,15 @@ O frontend comunica com o backend via `/api/*`, encaminhado pelo proxy do Vite p
 ## Pré-requisitos
 
 - **Java 17** ou superior (para o backend)
-- **Node.js 18+** e **npm** (para o frontend)
-- **Maven** (ou usar o `mvnw` incluído no projeto, se presente no IntelliJ)
+- **Node.js 20** e **npm** (versão usada pela CI)
+- **Maven** instalado (não existe Maven Wrapper neste repositório)
+- **Docker** para PostgreSQL e testes Testcontainers
 
 ## Como correr — Backend (Spring Boot)
+
+Antes de usar qualquer opção, configure as variáveis da secção
+[Configuração segura de acesso](#configuração-segura-de-acesso). No IntelliJ,
+adicione-as à configuração de execução. Sem elas, o arranque é recusado.
 
 ### Opção A — IntelliJ IDEA (recomendado para a apresentação)
 
@@ -55,7 +76,7 @@ A consola H2 está desactivada por defeito; para depuração local, configure `H
 Num segundo terminal, a partir da raiz do projeto:
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -107,7 +128,7 @@ As credenciais anteriormente publicadas devem ser consideradas comprometidas e s
 - Detalhe por transformador: cálculo individualizado de perda pro-rata por medidor,
   com diagnóstico de suspeita (`Suspeita de Bypass`, `Consumo Elevado`, `Regular`)
 - Exportação de relatório de auditoria em PDF por transformador
-- Simulação de ligação clandestina e regularização de setor (apenas ADMIN) — chama o
+- Simulação de discrepâncias e regularização de setor (apenas ADMIN + perfil `demo`) — chama o
   backend real, que recalcula o balanço energético
 
 ## Limitações conhecidas (próximos passos)
