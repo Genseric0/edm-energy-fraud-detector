@@ -290,7 +290,7 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
                 {detailed.lossPercentage.toFixed(1)}%
               </div>
               <span className="text-[10px] text-slate-500">
-                Margem legal tolerada: {TECHNICAL_LOSS_THRESHOLD.toFixed(1)}%
+                Limiar demonstrativo: {TECHNICAL_LOSS_THRESHOLD.toFixed(1)}%
               </span>
             </div>
 
@@ -335,7 +335,7 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
             {detailed.totalBilledKwh.toLocaleString('pt-MZ')} <span className="text-xs font-normal">kWh</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
-            Total legalmente registrado nas residências
+            Total faturado nos contadores
           </p>
         </div>
 
@@ -348,7 +348,7 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
             {detailed.lossKwh.toLocaleString('pt-MZ')} <span className="text-xs font-normal">kWh ({detailed.lossPercentage.toFixed(1)}%)</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
-            {isCritical ? 'Discrepância não técnica acentuada' : 'Perda dentro do limiar técnico'}
+            {isCritical ? 'Discrepância a investigar' : 'Abaixo do limiar demonstrativo'}
           </p>
         </div>
 
@@ -447,7 +447,7 @@ export const TransformerDetailView: React.FC<TransformerDetailViewProps> = ({
                 <th className="py-3 px-4 font-semibold">Endereço</th>
                 <th className="py-3 px-4 font-semibold text-right">Consumo Faturado</th>
                 <th className="py-3 px-4 font-semibold text-right">Participação Setor</th>
-                <th className="py-3 px-4 font-semibold text-right">Perda Individual Alocada</th>
+                <th className="py-3 px-4 font-semibold text-right">Estimativa pro-rata (kWh)</th>
                 <th className="py-3 px-4 font-semibold text-right">Prejuízo Pro-Rata</th>
                 <th className="py-3 px-4 font-semibold text-right">Desvio da Média</th>
                 <th className="py-3 px-4 font-semibold text-center">Diagnóstico do Ramal</th>

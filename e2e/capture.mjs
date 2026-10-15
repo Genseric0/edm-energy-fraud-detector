@@ -34,6 +34,7 @@ try {
   assert.equal((await capabilities.json()).demoEnabled, false);
   assert.equal(await page.locator('button[title^="Simular"]').count(), 0,
     'A tabela não deve oferecer simulação fora do perfil demo');
+  await page.mouse.move(0, 0);
   await page.screenshot({ path: 'artifacts/screenshots/02-dashboard.png', fullPage: true });
 
   assert.equal(await page.evaluate(() => localStorage.getItem('gridaudit_jwt_token')), null, 'Token não deve persistir no browser');
@@ -52,6 +53,9 @@ try {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole('button', { name: 'Medidores', exact: true }).first().click();
   await page.locator('#btn-export-audit-pdf').waitFor({ timeout: 30000 });
+  await page.getByText('Limiar demonstrativo:', { exact: false }).waitFor();
+  assert.equal(await page.getByText('Margem legal tolerada:', { exact: false }).count(), 0);
+  await page.mouse.move(0, 0);
   assert.equal(await page.locator('button[title^="Simular"]').count(), 0);
   await page.screenshot({ path: 'artifacts/screenshots/04-transformer-detail.png', fullPage: true });
   const downloadPromise = page.waitForEvent('download');
