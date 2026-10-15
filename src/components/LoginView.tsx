@@ -53,7 +53,8 @@ export const LoginView: React.FC = () => {
             Auditoria Energética
           </h1>
           <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
-            Detecção de Perdas Não Técnicas &amp; Fraudes em Redes de Distribuição Elétrica
+            GridAudit — análise de discrepâncias de energia com dados sintéticos.
+            Projecto independente, sem afiliação à EDM.
           </p>
         </div>
 

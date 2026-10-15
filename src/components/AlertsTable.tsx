@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { energyApi } from '../api/energyApi';
 import { TransformerAnalysis } from '../types/energy';
 import {
   ShieldAlert,
@@ -24,6 +26,15 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
   onSimulateTheft,
   onNormalizeSector
 }) => {
+  const { isAdmin } = useAuth();
+  const [demoEnabled, setDemoEnabled] = useState(false);
+  useEffect(() => {
+    let active = true;
+    energyApi.getCapabilities()
+      .then(data => { if (active) setDemoEnabled(data.demoEnabled); })
+      .catch(() => { if (active) setDemoEnabled(false); });
+    return () => { active = false; };
+  }, []);
   const [filter, setFilter] = useState<'ALL' | 'CRITICAL' | 'NORMAL'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -56,7 +67,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Classificação automatizada baseada na margem de tolerância técnica de 5% da energia fornecida
+            Triagem pelo limiar demonstrativo de 5%; não comprova fraude nem conformidade técnica
           </p>
         </div>
 
@@ -95,7 +106,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
               }`}
             >
               <ShieldAlert className="w-3 h-3" />
-              Fraude ({criticalCount})
+              Alertas ({criticalCount})
             </button>
             <button
               onClick={() => setFilter('NORMAL')}
@@ -201,7 +212,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                         <div
                           className="absolute top-0 bottom-0 w-0.5 bg-amber-400/80 z-10"
                           style={{ left: '10%' }}
-                          title="Limite tolerável: 5%"
+                          title="Limiar demonstrativo: 5%"
                         />
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
@@ -222,7 +233,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-medium">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                          <span>Normal: Perda Técnica Aceitável</span>
+                          <span>Abaixo do limiar demonstrativo</span>
                         </span>
                       )}
                     </td>
@@ -239,7 +250,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                           <ChevronRight className="w-3 h-3 text-slate-400" />
                         </button>
 
-                        {isCritical ? (
+                        {isAdmin && demoEnabled && (isCritical ? (
                           <button
                             onClick={() => onNormalizeSector(item.transformerId)}
                             className="p-1 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/60 transition"
@@ -255,7 +266,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                           >
                             <Flame className="w-3.5 h-3.5" />
                           </button>
-                        )}
+                        ))}
                       </div>
                     </td>
 

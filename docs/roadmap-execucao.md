@@ -98,3 +98,52 @@ Base dependente: `22e23e4` do PR #4, confirmado aberto e com backend/frontend, P
 - Métricas públicas observadas em 13/10/2026: 0 estrelas e 0 forks, sem alteração; não há dados confirmados de tráfego.
 
 **Pendências:** administração autorizada de contas, rotação de password com incremento de `authVersion`, refresh/revogação por sessão, MFA e SEC-02. A Fase 0 não está concluída. Próximo lote: API administrativa auditável para ciclo de vida de contas e depois refresh/revogação; a Fase 1 mantém BigDecimal, unicidade temporal e backup/restauro pendentes.
+
+## Quinto e sexto lotes — consolidação em 15/10/2026
+
+Estado remoto confirmado: PRs #2–#7 abertos, em cadeia dependente; nenhum integrado em `main`.
+O [PR #6](https://github.com/Genseric0/edm-energy-fraud-detector/pull/6) corrige concorrência
+no bloqueio de contas: revalidação transaccional no sucesso do login, recuperação após
+expiração e testes de falhas concorrentes em PostgreSQL. A base usada pelo PR #7 é
+`7b18cebab46a4e8ad434c80a932212d31c467abb`.
+
+O [PR #7](https://github.com/Genseric0/edm-energy-fraud-detector/pull/7) estabiliza a demonstração
+e prepara a apresentação pública solicitada, em paralelo com a Fase 0 e qualidade da Fase 5:
+
+- `AlertsTable.tsx`: simulação visível apenas para ADMIN quando a API confirma demo;
+  ausência de capacidade mantém os comandos escondidos.
+- `App.tsx`, `LoginView.tsx`, `SummaryCards.tsx`, `TransformerDetailView.tsx`,
+  `DiscrepancyChart.tsx`, `constants/energy.ts` e `generateAuditPdf.ts`: identificação
+  independente, valores demonstrativos, faturado distinto de pago, estimativa pro-rata
+  distinta de medição individual; remoção de alegações de limiar legal e relatório oficial.
+- Gráficos sem animação inicial apresentam imediatamente os valores completos.
+- `e2e/capture.mjs`: verifica ausência de simulação fora de demo, erros JavaScript,
+  detalhe, download PDF e textos; retira o cursor do gráfico antes das capturas.
+- `README.md`, `docs/SHOWCASE.md`, `docs/screenshots/*.png`: tour PT/EN com quatro
+  capturas reais (login, desktop, mobile, detalhe), dados sintéticos e proveniência.
+  README passa a indicar configuração de credenciais antes do arranque e `npm ci`.
+
+Build TypeScript/Vite local aprovado em 15/10/2026. O bundle principal ainda gera aviso
+de tamanho; optimização por carregamento diferido permanece pendente. Maven/Docker não
+estão disponíveis no ambiente local: validação backend e PostgreSQL é executada na CI.
+O commit anterior `cbb3f107` tinha os três workflows aprovados. A nova validação funcional
+e origem dos prints é `0d7f32b1fe2d46af9850580220795f895126f8ee`, no
+[workflow visual/PostgreSQL](https://github.com/Genseric0/edm-energy-fraud-detector/actions/runs/38782377939).
+Na [CI backend/frontend](https://github.com/Genseric0/edm-energy-fraud-detector/actions/runs/38782378040),
+os logs confirmam **53 testes, zero falhas, zero erros e zero ignorados**, além do build
+frontend e smoke de login/API aprovados. O [CodeQL](https://github.com/Genseric0/edm-energy-fraud-detector/actions/runs/38782377950)
+também passou. Links relativos do README e tour verificados localmente.
+Workflow visual/PostgreSQL aprovado: persistência após reinício, login, detalhe e download
+PDF concluídos. As quatro imagens do artefacto `11995728996` foram inspeccionadas
+visualmente antes de serem versionadas. O gráfico desktop já mostra as barras completas,
+sem tooltip sobreposto; a captura mobile evidencia a tabela com deslocamento horizontal.
+
+Métricas públicas em 15/10/2026: **0 estrelas, 0 forks**, variação zero face ao último
+registo. O endpoint de contribuidores não está disponível pelo conector; contagem não
+confirmada. Tráfego e alcance não foram medidos. Não houve divulgação externa.
+
+**Próximo passo:** administração auditável de contas e mudança de password com invalidação
+de tokens; depois refresh/revogação por sessão. SEC-02 exige rotação externa e tratamento
+coordenado do histórico. Fase 1 mantém BigDecimal, unicidade temporal e backup/restauro.
+Os PRs dependem de revisão humana na ordem #2 → #7. CI verde de um lote não conclui
+a Fase 0 nem certifica prontidão para produção; fases 2–6 continuam pendentes.

@@ -73,7 +73,7 @@ export const DiscrepancyChart: React.FC<DiscrepancyChartProps> = ({
           <div className="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-[11px]">
             <span className={`inline-flex items-center gap-1 font-medium ${data.isCritical ? 'text-rose-400' : 'text-emerald-400'}`}>
               {data.isCritical && <ShieldAlert className="w-3 h-3" />}
-              {data.isCritical ? 'Suspeita de Ligação Clandestina' : 'Perda Técnica Normal'}
+              {data.isCritical ? 'Discrepância a investigar' : 'Abaixo do limiar demonstrativo'}
             </span>
             <span className="text-slate-500">Clique na barra para detalhes</span>
           </div>
@@ -159,9 +159,9 @@ export const DiscrepancyChart: React.FC<DiscrepancyChartProps> = ({
                   return value;
                 }}
               />
-              <Bar dataKey="fornecido" fill="#0284c7" radius={[4, 4, 0, 0]} maxBarSize={38} />
-              <Bar dataKey="faturado" fill="#059669" radius={[4, 4, 0, 0]} maxBarSize={38} />
-              <Bar dataKey="perda" fill="#e11d48" radius={[4, 4, 0, 0]} maxBarSize={38} />
+              <Bar isAnimationActive={false} dataKey="fornecido" fill="#0284c7" radius={[4, 4, 0, 0]} maxBarSize={38} />
+              <Bar isAnimationActive={false} dataKey="faturado" fill="#059669" radius={[4, 4, 0, 0]} maxBarSize={38} />
+              <Bar isAnimationActive={false} dataKey="perda" fill="#e11d48" radius={[4, 4, 0, 0]} maxBarSize={38} />
             </BarChart>
           ) : (
             <LineChart
@@ -194,13 +194,14 @@ export const DiscrepancyChart: React.FC<DiscrepancyChartProps> = ({
                 stroke="#f43f5e"
                 strokeDasharray="4 4"
                 label={{
-                  value: 'Limite Tolerável: 5.0%',
+                  value: 'Limiar demonstrativo: 5.0%',
                   fill: '#fb7185',
                   fontSize: 11,
                   position: 'insideTopRight'
                 }}
               />
               <Line
+                isAnimationActive={false}
                 type="monotone"
                 dataKey="lossPercentage"
                 stroke="#f43f5e"

@@ -131,7 +131,8 @@ function Dashboard() {
                 pode ser difícil sem sensores adicionais, histórico e inspecção técnica.
               </p>
               <p className="text-xs text-sky-200/90">
-                Alertas indicam necessidade de investigação, não provam fraude. Dados e simulações são demonstrativos.
+                Alertas não provam fraude. Dados sintéticos; estimativas não são medições individuais nem multas.
+                Limiar de 5% e valor de 7,50 MT/kWh são demonstrativos, sem validação oficial.
               </p>
             </div>
           </div>
@@ -185,7 +186,7 @@ function Dashboard() {
 
       <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>EDM • Sistema de Auditoria Energética e Detecção de Perdas Não Técnicas</span>
+          <span>GridAudit • Projecto independente, sem afiliação à EDM</span>
           <span className="text-slate-500">Maputo, Moçambique</span>
         </div>
       </footer>
