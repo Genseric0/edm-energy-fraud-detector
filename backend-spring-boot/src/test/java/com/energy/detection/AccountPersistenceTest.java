@@ -35,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("postgres")
 @AutoConfigureMockMvc
 @SpringBootTest(properties = {
+    "app.demo.seed-enabled=false",
     "JWT_SECRET=test-only-persistence-key-at-least-32-bytes",
     "EDM_GENSERICO_PASSWORD=test-genserico-password",
     "EDM_OXIDIA_PASSWORD=test-oxidia-password",
