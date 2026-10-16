@@ -65,9 +65,12 @@ cd backend-spring-boot
 mvn spring-boot:run
 ```
 
-O backend arranca em **http://localhost:8080**, com a base de dados H2 em memória já
-populada com 6 transformadores e ~41 medidores de bairros reais de Maputo (Zimpeto,
-Xipamanine, Mafalala, etc.) — ver `DataSeeder.java`.
+O backend arranca em **http://localhost:8080**. A grelha começa vazia por defeito.
+Para uma demonstração isolada, defina `EDM_SEED_ENABLED=true` antes do arranque:
+serão criados 6 transformadores e 41 contadores inteiramente sintéticos, com bairros
+de Maputo como contexto — ver `DataSeeder.java`. Nunca active esta opção numa base real.
+Esta opção permite carregar fixtures sem activar os comandos de simulação, que exigem
+separadamente o perfil `demo`.
 
 A consola H2 está desactivada por defeito; para depuração local, configure `H2_CONSOLE_ENABLED=true` e visite `http://localhost:8080/h2-console` apenas na máquina de desenvolvimento.
 
@@ -99,6 +102,7 @@ Antes de iniciar o backend, configure estas variáveis de ambiente:
 | `JWT_SECRET` | Segredo aleatório com pelo menos 32 bytes para assinatura HS256 |
 | `EDM_CORS_ORIGIN` | Origem permitida do frontend (por defeito `http://localhost:3000`) |
 | `H2_CONSOLE_ENABLED` | `true` somente quando for preciso depurar localmente (por defeito `false`) |
+| `EDM_SEED_ENABLED` | `true` apenas para popular uma grelha vazia com dados sintéticos (por defeito `false`) |
 
 Exemplo em Linux/macOS:
 
@@ -108,6 +112,8 @@ export EDM_OXIDIA_PASSWORD="$(openssl rand -hex 24)"
 export EDM_LEYSA_PASSWORD="$(openssl rand -hex 24)"
 export EDM_HELEN_PASSWORD="$(openssl rand -hex 24)"
 export JWT_SECRET="$(openssl rand -hex 32)"
+# Só numa base local de demonstração; omitir para manter a grelha vazia:
+export EDM_SEED_ENABLED=true
 cd backend-spring-boot
 mvn spring-boot:run
 ```
@@ -117,6 +123,15 @@ No PowerShell, defina os mesmos valores em `$env:EDM_GENSERICO_PASSWORD`, `$env:
 Cada password deve ser diferente, ter pelo menos 12 caracteres e no máximo 72 bytes UTF-8. As antigas variáveis por papel deixam de ser aceites; é necessário configurar as quatro variáveis individuais antes de actualizar. Os exemplos geram valores novos a cada execução.
 
 **Utilizadores de demonstração:** `genserico` e `oxidia` (ADMIN), `leysa` e `helen` (OPERATOR). Estes nomes não são contas de produção. O acesso rápido com passwords embutidas foi removido.
+
+**Mudar password:** após o login, use o botão com chave «Alterar password» no cabeçalho.
+Exige a password actual e uma nova diferente, com 12+ caracteres e até 72 bytes UTF-8.
+Guardar termina a sessão; todos os tokens anteriores desta conta deixam de ser aceites
+nos pedidos seguintes. É necessário entrar com a nova password. As variáveis do primeiro
+arranque não substituem uma password já persistida. A API é `POST /api/auth/password`,
+com `currentPassword` e `newPassword`; a conta vem exclusivamente da sessão autenticada.
+Falhas da password actual contam para o bloqueio da conta. Login e mudança de password
+partilham o limite de 10 pedidos/minuto por IP e instância.
 
 As credenciais anteriormente publicadas devem ser consideradas comprometidas e substituídas. Se o sistema já esteve acessível a terceiros, substitua também o segredo JWT e invalide sessões anteriores.
 
@@ -142,6 +157,8 @@ As credenciais anteriormente publicadas devem ser consideradas comprometidas e s
 - As contas iniciais são criadas com hash BCrypt em `app_user` apenas quando a tabela
   está vazia; reinícios não reescrevem credenciais. As passwords do primeiro arranque
   devem vir de um cofre de segredos em produção.
+- Ainda não existe cadastro de grelha na interface/API: uma base vazia é um estado
+  esperado e não deve ser preenchida com dados fictícios para contornar essa pendência.
 
 ## Stack técnica
 
@@ -175,7 +192,7 @@ O H2 continua a ser o perfil de demonstração por defeito. Para guardar os dado
 
 A configuração está em `application-postgres.properties`. Os dados ficam no volume Docker `gridaudit_pgdata`, que sobrevive a `docker compose down` (mas **não** a `docker compose down -v`).
 
-**Migrações:** PostgreSQL usa Flyway V1–V3 e `hibernate.ddl-auto=validate`. Bases antigas não vazias e sem histórico Flyway são recusadas; é necessária adopção revista numa cópia restaurada, conforme [runbook](docs/runbooks/postgres-migrations.md). Nunca activar baseline automático para contornar esse erro. Contas e dados demonstrativos do DataSeeder não são dados reais de clientes EDM.
+**Migrações:** PostgreSQL usa Flyway V1–V4 e `hibernate.ddl-auto=validate`. Bases antigas não vazias e sem histórico Flyway são recusadas; é necessária adopção revista numa cópia restaurada, conforme [runbook](docs/runbooks/postgres-migrations.md). Nunca activar baseline automático para contornar esse erro. Contas e dados demonstrativos do DataSeeder não são dados reais de clientes EDM.
 
 ## Roadmap e segurança
 

@@ -11,7 +11,10 @@ O GridAudit é um protótipo independente para estudar discrepâncias de energia
 5. Abra um PR com os ficheiros afectados, resultados dos testes e screenshots quando alterar a interface. Informe testes que não conseguiu executar.
 6. Aguarde CI verde e revisão humana antes do merge. Um PR dependente deve indicar a sua base; não copiar alterações já propostas noutro PR.
 
-As simulações exigem `SPRING_PROFILES_ACTIVE=demo` e dados sintéticos. Não executar pentests contra instalações de terceiros. Reportar vulnerabilidades conforme SECURITY.md, sem publicar segredos.
+Os dados sintéticos exigem `EDM_SEED_ENABLED=true` numa base isolada. As simulações
+exigem também `SPRING_PROFILES_ACTIVE=demo`. Desligar o seed não remove fixtures já
+persistidas. Não executar pentests contra instalações de terceiros. Reportar
+vulnerabilidades conforme SECURITY.md, sem publicar segredos.
 
 Contribuições iniciais úteis: corrigir instruções que não funcionam, melhorar mensagens em português/inglês, documentar acessibilidade e reproduzir um erro com dados sintéticos. Confirme primeiro as issues e PRs abertos para evitar duplicação. Não apresentar funcionalidades planeadas como existentes.
 
@@ -24,6 +27,9 @@ GridAudit is an independent prototype for investigating energy discrepancies. An
 - Work on a focused branch. Run `mvn -B verify -f backend-spring-boot/pom.xml`, `npm ci` and `npm run build`.
 - Describe the problem, changed behaviour, limitations and actual test results in the PR. Include screenshots for UI changes and disclose checks you could not run.
 - Require green CI and human review before merging. Clearly identify dependent PRs and avoid duplicate work.
-- Demo mutations require the `demo` profile and synthetic data. Follow SECURITY.md for vulnerability reports. Do not test third-party deployments without authorisation.
+- Synthetic fixtures require explicit `EDM_SEED_ENABLED=true` in an isolated database;
+  demo mutations additionally require the `demo` profile. Disabling the seed does not
+  remove previously stored fixtures. Follow SECURITY.md for vulnerability reports.
+  Do not test third-party deployments without authorisation.
 
 Good first contributions include reproducible documentation fixes, Portuguese/English wording and accessibility improvements. Check open issues and PRs first. Do not describe planned features as shipped.

@@ -38,4 +38,15 @@ class LoginRateLimitTest {
         clock.now = clock.now.plusSeconds(60);
         assertEquals(200, login(filter, "192.0.2.1").getStatus());
     }
+
+    @Test void passwordRotationSharesTheLoginIpBudget() throws Exception {
+        var filter = new LoginRateLimitFilter(new MutableClock());
+        for (int i = 0; i < 10; i++) login(filter, "192.0.2.3");
+        var request = new MockHttpServletRequest("POST", "/api/auth/password");
+        request.setServletPath("/api/auth/password");
+        request.setRemoteAddr("192.0.2.3");
+        var response = new MockHttpServletResponse();
+        filter.doFilter(request, response, (req, res) -> fail("Rate limit contornado"));
+        assertEquals(429, response.getStatus());
+    }
 }

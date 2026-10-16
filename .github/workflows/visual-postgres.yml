@@ -27,6 +27,7 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 12
     env:
       SPRING_PROFILES_ACTIVE: postgres
+      EDM_SEED_ENABLED: 'true'
       EDM_CORS_ORIGIN: http://127.0.0.1:3000
       DB_PASSWORD: ci-database-only
       EDM_GENSERICO_PASSWORD: ci-genserico-test-password
