@@ -147,3 +147,65 @@ de tokens; depois refresh/revogação por sessão. SEC-02 exige rotação extern
 coordenado do histórico. Fase 1 mantém BigDecimal, unicidade temporal e backup/restauro.
 Os PRs dependem de revisão humana na ordem #2 → #7. CI verde de um lote não conclui
 a Fase 0 nem certifica prontidão para produção; fases 2–6 continuam pendentes.
+
+## Sétimo lote — 16/10/2026
+
+Base confirmada: PR #7, `073d135`, com backend/frontend, PostgreSQL/Playwright e CodeQL
+aprovados. PRs #2–#7 continuam abertos, sem merge. O [PR #8](https://github.com/Genseric0/edm-energy-fraud-detector/pull/8),
+branch `fix/production-boundaries`, depende de #7. Fase 0 em curso; qualidade da Fase 5
+e suporte de dados da Fase 1 decorrem em paralelo.
+
+- SEC-04: `PasswordChangeController`, DTO e `PasswordChangeService` permitem mudar
+  apenas a password da própria sessão, com confirmação da actual. Lock pessimista
+  revalida identidade, estado e `authVersion`; a nova password deve ser diferente e
+  respeitar os limites BCrypt (12+ caracteres, até 72 bytes UTF-8).
+- V4 e `AccountSecurityEvent`/repositório: hash, incremento de versão e evento mínimo
+  são confirmados na mesma transacção. Falha de auditoria reverte a mudança. Evento
+  não guarda passwords, hashes, tokens ou IP. Trigger PostgreSQL recusa UPDATE/DELETE;
+  proprietário da BD continua privilegiado, sem garantia contra administração hostil.
+- `LoginRateLimitFilter`: login e mudança de password partilham o limite por IP.
+  Password actual errada conta para bloqueio persistente; DTOs não expõem passwords
+  nas representações textuais e o login limita o tamanho dos campos recebidos.
+- `Header`, `PasswordChangeDialog`, `authApi`: formulário acessível por teclado,
+  confirmação, estado de envio, erros e novo login obrigatório após guardar.
+- `DataSeeder` e configuração: grelha sintética desactivada por defeito, incluindo
+  PostgreSQL; `EDM_SEED_ENABLED=true` apenas para demos isoladas e CI. Desligar a opção
+  não apaga dados existentes. Contas de bootstrap continuam separadas e são pendência.
+- Testes PostgreSQL: revogação real de token, rejeição da password antiga, novo login,
+  isolamento de contas, anonimato, política UTF-8, bloqueio, duas rotações concorrentes,
+  rollback de auditoria e trigger de protecção. Migrações verificadas até V4.
+- E2E: formulário, fim de sessão, rejeição de token/password antigos e login novo;
+  capturas desktop/mobile do diálogo sem passwords preenchidas.
+- Documentação: README, CONTRIBUTING, runbook PostgreSQL e tour actualizados;
+  [revisão de segurança/dados](security-review-2026-10-16.md) reconstrói os fluxos do
+  próprio código e lista bloqueios para dados reais. Não foi feito pentest externo.
+
+Validação local: TypeScript/Vite, sintaxe E2E e `git diff --check` aprovados. Maven/Docker
+indisponíveis localmente; a CI principal do primeiro commit confirmou **65 testes sem
+falhas/erros/ignorados**. A CI visual detectou que o opt-in de fixtures do job afectava
+o teste negativo de base vazia; corrigida a configuração desse teste no commit
+`ba2064dea545ff05dc9e48f6bbe84b925d450a90`.
+
+A revisão visual identificou o diálogo no canto superior; corrigido em `e001683`,
+com verificação de centragem desktop e limites do viewport mobile no E2E.
+Validação final desse código funcional em 16/10/2026:
+
+- [CI backend/frontend](https://github.com/Genseric0/edm-energy-fraud-detector/actions/runs/38849132602):
+  **65 testes, zero falhas, zero erros e zero ignorados**, build e smoke aprovados.
+- [PostgreSQL/Playwright](https://github.com/Genseric0/edm-energy-fraud-detector/actions/runs/38849132607):
+  persistência após reinício, login, PDF, mudança de password, revogação e novo login aprovados.
+- [CodeQL](https://github.com/Genseric0/edm-energy-fraud-detector/actions/runs/38849132548): aprovado.
+- Seis capturas reais do artefacto `12024502522`, inspeccionadas visualmente e versionadas
+  em `docs/screenshots`; origem `e001683a15c07a4f1ddb9ede36c6362835219b96`.
+  Documentação/imagens são acrescentadas num commit posterior, sem alterar o código funcional.
+- Links relativos do README, CONTRIBUTING, tour e relatórios verificados localmente.
+  O aviso de tamanho do bundle frontend continua pendente.
+
+Métricas públicas observadas em 16/10/2026: **0 estrelas e 0 forks**, variação zero.
+Contribuidores e tráfego permanecem sem confirmação; nenhum alcance foi inferido.
+
+**Próximo passo:** administração auditável de contas e autorização por área; depois
+refresh/revogação por sessão. Em dados: BigDecimal/NUMERIC, unicidade/proveniência das
+leituras e períodos de balanço compatíveis. SEC-02, actualização de framework e teste
+de restauro continuam bloqueios de produção. A Fase 0 não está concluída e este lote
+não foi integrado em main. Revisão humana continua obrigatória na cadeia #2 → #8.
