@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.List;
  * - Simulação de perdas normais (perda <= 5%) e fraudes críticas (perda > 20%)
  */
 @Component
+@ConditionalOnProperty(name = "app.demo.seed-enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class DataSeeder implements CommandLineRunner {

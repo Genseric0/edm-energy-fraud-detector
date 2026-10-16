@@ -63,8 +63,33 @@ try {
   const download = await downloadPromise;
   assert.match(download.suggestedFilename(), /^GridAudit_Demonstracao_.*\.pdf$/);
   await download.saveAs('artifacts/demo-report.pdf');
+  await page.getByRole('button', { name: 'Alterar password', exact: true }).click();
+  const passwordDialog = page.getByRole('dialog');
+  await passwordDialog.waitFor();
+  await page.screenshot({ path: 'artifacts/screenshots/05-password-desktop.png', fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: 'artifacts/screenshots/06-password-mobile.png', fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const rotatedPassword = 'Rotated-' + process.env.EDM_GENSERICO_PASSWORD;
+  await passwordDialog.getByLabel('Password actual', { exact: true }).fill(process.env.EDM_GENSERICO_PASSWORD);
+  await passwordDialog.getByLabel('Nova password', { exact: true }).fill(rotatedPassword);
+  await passwordDialog.getByLabel('Confirmar nova password', { exact: true }).fill(rotatedPassword);
+  await passwordDialog.getByRole('button', { name: 'Guardar password', exact: true }).click();
+  await page.getByText('Auditoria Energética', { exact: true }).waitFor();
+  const revoked = await page.request.get('http://127.0.0.1:3000/api/auth/me', {
+    headers: { Authorization: 'Bearer ' + token },
+  });
+  assert.equal(revoked.status(), 401, 'Token anterior deve ser revogado após mudar password');
+  const oldLogin = await page.request.post('http://127.0.0.1:3000/api/auth/login', {
+    data: { username: 'genserico', password: process.env.EDM_GENSERICO_PASSWORD },
+  });
+  assert.equal(oldLogin.status(), 401, 'Password anterior deve ser recusada');
+  await page.locator('input[type="text"]').fill('genserico');
+  await page.locator('input[type="password"]').fill(rotatedPassword);
+  await page.getByRole('button', { name: /Acessar Dashboard/i }).click();
+  await page.getByText('Total Fornecido').waitFor();
   assert.deepEqual(pageErrors, [], 'Excepções JavaScript na interface');
-  console.log('Login, dashboard e dados de transformadores verificados.');
+  console.log('Login, persistência, dashboard, PDF, mudança de password e revogação verificados.');
 } finally {
   await browser.close();
 }

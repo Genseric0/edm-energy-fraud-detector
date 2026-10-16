@@ -27,6 +27,7 @@ jobs:
       - name: Testar arranque, login e resumo da API
         env:
           SPRING_PROFILES_ACTIVE: demo
+          EDM_SEED_ENABLED: 'true'
           EDM_GENSERICO_PASSWORD: ci-genserico-test-password
           EDM_OXIDIA_PASSWORD: ci-oxidia-test-password
           EDM_LEYSA_PASSWORD: ci-leysa-test-password

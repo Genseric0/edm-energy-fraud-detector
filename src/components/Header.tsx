@@ -1,6 +1,7 @@
-import React from 'react';
-import { Zap, ShieldAlert, RotateCcw, LogOut, User, Shield } from 'lucide-react';
+import React, { useState } from 'react';
+import { Zap, ShieldAlert, RotateCcw, LogOut, User, Shield, KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { PasswordChangeDialog } from './PasswordChangeDialog';
 
 interface HeaderProps {
   onResetData: () => void;
@@ -12,6 +13,7 @@ export const Header: React.FC<HeaderProps> = ({
   criticalCount
 }) => {
   const { user, logout, isAdmin } = useAuth();
+  const [changingPassword, setChangingPassword] = useState(false);
 
   return (
     <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30">
@@ -76,6 +78,14 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
 
               <button
+                onClick={() => setChangingPassword(true)}
+                title="Alterar password"
+                aria-label="Alterar password"
+                className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 border border-slate-700/60"
+              >
+                <KeyRound className="w-4 h-4" />
+              </button>
+              <button
                 onClick={logout}
                 title="Encerrar Sessão (Logout)"
                 className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-rose-950/60 hover:text-rose-400 text-slate-400 border border-slate-700/60 transition"
@@ -87,6 +97,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
       </div>
+      {changingPassword && <PasswordChangeDialog onClose={() => setChangingPassword(false)} />}
     </header>
   );
 };

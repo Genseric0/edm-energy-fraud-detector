@@ -33,13 +33,13 @@ class PostgresMigrationTest {
     @Test void freshSchemaMigratesAndRepeatedStartupDoesNotReapply() throws Exception {
         String schema = schema();
         Flyway flyway = config(schema).load();
-        assertEquals(3, flyway.migrate().migrationsExecuted);
+        assertEquals(4, flyway.migrate().migrationsExecuted);
         flyway.validate();
         assertEquals(0, flyway.migrate().migrationsExecuted);
         try (var c = connection(schema); var s = c.createStatement()) {
             var result = s.executeQuery("SELECT count(*) FROM flyway_schema_history WHERE success AND version IS NOT NULL");
             assertTrue(result.next());
-            assertEquals(3, result.getInt(1));
+            assertEquals(4, result.getInt(1));
             result = s.executeQuery("SELECT count(*) FROM information_schema.tables WHERE table_schema = current_schema() AND table_name IN ('transformers','residential_meters','meter_readings','inspection_records','app_user')");
             assertTrue(result.next());
             assertEquals(5, result.getInt(1));
@@ -56,7 +56,7 @@ class PostgresMigrationTest {
             s.executeUpdate("INSERT INTO meter_readings (meter_id,recorded_at,energy_kwh,source) VALUES (1,'2026-01-01T00:00:00Z',123.45,'MANUAL')");
             s.executeUpdate("INSERT INTO inspection_records (meter_id,created_at,reported_by,estimated_unaccounted_kwh,status) VALUES (1,'2026-01-01T00:00:00Z','test',12.5,'PENDING_REVIEW')");
         }
-        assertEquals(2, config(schema).load().migrate().migrationsExecuted);
+        assertEquals(3, config(schema).load().migrate().migrationsExecuted);
         try (var c = connection(schema); var s = c.createStatement()) {
             var result = s.executeQuery("SELECT energy_kwh FROM meter_readings WHERE id=1");
             assertTrue(result.next());
