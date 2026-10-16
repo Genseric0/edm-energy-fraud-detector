@@ -34,7 +34,7 @@ export function PasswordChangeDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <dialog ref={dialog} onCancel={onClose} aria-labelledby="password-title"
-      className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-100 backdrop:bg-slate-950/80">
+      className="m-auto w-11/12 max-w-md max-h-[90dvh] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-6 text-slate-100 backdrop:bg-slate-950/80">
       <form onSubmit={submit} className="space-y-4">
         <h2 id="password-title" className="text-lg font-bold">Alterar password</h2>
         <p className="text-sm text-slate-400">Use 12 ou mais caracteres, até 72 bytes UTF-8. Ao guardar, todas as sessões desta conta terminam. Entre novamente com a nova password.</p>

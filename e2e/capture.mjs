@@ -66,9 +66,16 @@ try {
   await page.getByRole('button', { name: 'Alterar password', exact: true }).click();
   const passwordDialog = page.getByRole('dialog');
   await passwordDialog.waitFor();
-  await page.screenshot({ path: 'artifacts/screenshots/05-password-desktop.png', fullPage: true });
+  const desktopDialog = await passwordDialog.boundingBox();
+  assert.ok(desktopDialog && Math.abs(desktopDialog.x + desktopDialog.width / 2 - 720) <= 2,
+    'Diálogo deve ficar centrado no desktop');
+  await page.screenshot({ path: 'artifacts/screenshots/05-password-desktop.png' });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.screenshot({ path: 'artifacts/screenshots/06-password-mobile.png', fullPage: true });
+  const mobileDialog = await passwordDialog.boundingBox();
+  assert.ok(mobileDialog && mobileDialog.x >= 0 && mobileDialog.y >= 0
+    && mobileDialog.x + mobileDialog.width <= 390 && mobileDialog.y + mobileDialog.height <= 844,
+    'Diálogo deve caber no viewport mobile');
+  await page.screenshot({ path: 'artifacts/screenshots/06-password-mobile.png' });
   await page.setViewportSize({ width: 1440, height: 900 });
   const rotatedPassword = 'Rotated-' + process.env.EDM_GENSERICO_PASSWORD;
   await passwordDialog.getByLabel('Password actual', { exact: true }).fill(process.env.EDM_GENSERICO_PASSWORD);
