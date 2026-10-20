@@ -78,6 +78,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
+              aria-label="Pesquisar transformadores por bairro ou código"
               placeholder="Buscar bairro ou código..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -89,6 +90,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
           <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 self-start sm:self-auto">
             <button
               onClick={() => setFilter('ALL')}
+              aria-pressed={filter === 'ALL'}
               className={`px-2.5 py-1 rounded-md text-xs font-medium transition ${
                 filter === 'ALL'
                   ? 'bg-slate-800 text-white font-semibold'
@@ -99,6 +101,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
             </button>
             <button
               onClick={() => setFilter('CRITICAL')}
+              aria-pressed={filter === 'CRITICAL'}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition ${
                 filter === 'CRITICAL'
                   ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 font-semibold'
@@ -110,6 +113,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
             </button>
             <button
               onClick={() => setFilter('NORMAL')}
+              aria-pressed={filter === 'NORMAL'}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition ${
                 filter === 'NORMAL'
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold'
@@ -124,7 +128,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
       </div>
 
       {/* Responsive Table */}
-      <div className="overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left text-xs text-slate-300">
           <thead className="bg-slate-950/60 text-[11px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
             <tr>
@@ -228,7 +232,7 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
                       {isCritical ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-300 font-medium">
                           <AlertOctagon className="w-3.5 h-3.5 text-rose-400 shrink-0 animate-pulse" />
-                          <span>Alerta Crítico: Suspeita de Ligação Clandestina</span>
+                          <span>Discrepância a investigar</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-medium">
@@ -277,6 +281,27 @@ export const AlertsTable: React.FC<AlertsTableProps> = ({
           </tbody>
         </table>
       </div>
+
+      <section aria-label="Transformadores no telemóvel" className="md:hidden p-3 space-y-3">
+        {filteredTransformers.length === 0 && <p role="status" className="p-5 text-center text-sm text-slate-400">Nenhum transformador encontrado com os filtros aplicados.</p>}
+        {filteredTransformers.map(item => <article key={item.transformerId} className="rounded-xl border border-slate-700 bg-slate-950/50 p-4 space-y-3">
+          <div className="flex justify-between items-start gap-3">
+            <div className="min-w-0"><h3 className="font-semibold text-white">{item.neighborhood}</h3><p className="text-xs font-mono text-slate-400 break-all mt-1">{item.transformerCode}</p></div>
+            <span className={`text-lg font-bold font-mono ${item.isCriticalLoss ? 'text-rose-400' : 'text-emerald-400'}`}>{item.lossPercentage.toFixed(1)}%</span>
+          </div>
+          <p className={`text-xs ${item.isCriticalLoss ? 'text-rose-300' : 'text-emerald-300'}`}>{item.isCriticalLoss ? 'Discrepância a investigar' : 'Abaixo do limiar demonstrativo'}</p>
+          <dl className="grid grid-cols-2 gap-3 text-xs">
+            <div><dt className="text-slate-400">Fornecido</dt><dd className="mt-1 text-sky-300 font-mono">{item.totalSuppliedKwh.toLocaleString('pt-MZ')} kWh</dd></div>
+            <div><dt className="text-slate-400">Faturado</dt><dd className="mt-1 text-emerald-300 font-mono">{item.totalBilledKwh.toLocaleString('pt-MZ')} kWh</dd></div>
+            <div><dt className="text-slate-400">Discrepância</dt><dd className="mt-1 text-slate-200 font-mono">{item.lossKwh.toLocaleString('pt-MZ')} kWh</dd></div>
+            <div><dt className="text-slate-400">Contadores</dt><dd className="mt-1 text-slate-200">{item.metersCount}</dd></div>
+          </dl>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => onSelectTransformer(item)} aria-label={`Ver medidores de ${item.neighborhood}`} className="flex-1 min-h-11 rounded-lg bg-slate-800 px-3 py-2 text-sm font-medium text-white flex justify-center items-center gap-2">Ver medidores<ChevronRight className="w-4 h-4" /></button>
+            {isAdmin && demoEnabled && <button title={item.isCriticalLoss ? 'Simular regularização' : 'Simular discrepância'} onClick={() => item.isCriticalLoss ? onNormalizeSector(item.transformerId) : onSimulateTheft(item.transformerId)} className="min-h-11 rounded-lg border border-amber-800 px-3 py-2 text-xs text-amber-300">Simular</button>}
+          </div>
+        </article>)}
+      </section>
 
     </div>
   );

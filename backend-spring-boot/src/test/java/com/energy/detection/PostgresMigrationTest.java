@@ -4,6 +4,8 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -33,13 +35,13 @@ class PostgresMigrationTest {
     @Test void freshSchemaMigratesAndRepeatedStartupDoesNotReapply() throws Exception {
         String schema = schema();
         Flyway flyway = config(schema).load();
-        assertEquals(5, flyway.migrate().migrationsExecuted);
+        assertEquals(6, flyway.migrate().migrationsExecuted);
         flyway.validate();
         assertEquals(0, flyway.migrate().migrationsExecuted);
         try (var c = connection(schema); var s = c.createStatement()) {
             var result = s.executeQuery("SELECT count(*) FROM flyway_schema_history WHERE success AND version IS NOT NULL");
             assertTrue(result.next());
-            assertEquals(5, result.getInt(1));
+            assertEquals(6, result.getInt(1));
             result = s.executeQuery("SELECT count(*) FROM information_schema.tables WHERE table_schema = current_schema() AND table_name IN ('transformers','residential_meters','meter_readings','inspection_records','app_user')");
             assertTrue(result.next());
             assertEquals(5, result.getInt(1));
@@ -56,7 +58,7 @@ class PostgresMigrationTest {
             s.executeUpdate("INSERT INTO meter_readings (meter_id,recorded_at,energy_kwh,source) VALUES (1,'2026-01-01T00:00:00Z',123.45,'MANUAL')");
             s.executeUpdate("INSERT INTO inspection_records (meter_id,created_at,reported_by,estimated_unaccounted_kwh,status) VALUES (1,'2026-01-01T00:00:00Z','test',12.5,'PENDING_REVIEW')");
         }
-        assertEquals(4, config(schema).load().migrate().migrationsExecuted);
+        assertEquals(5, config(schema).load().migrate().migrationsExecuted);
         try (var c = connection(schema); var s = c.createStatement()) {
             var result = s.executeQuery("SELECT energy_kwh FROM meter_readings WHERE id=1");
             assertTrue(result.next());
@@ -102,7 +104,7 @@ class PostgresMigrationTest {
             s.executeUpdate("INSERT INTO app_user(username,password_hash,display_name,role,auth_version) VALUES ('synthetic-admin','test-only-hash','Synthetic','ADMIN',1)");
             s.executeUpdate("INSERT INTO account_security_event(account_id,occurred_at,action,auth_version) VALUES (1,'2026-01-01T00:00:00Z','PASSWORD_CHANGED',1)");
         }
-        assertEquals(1,config(schema).load().migrate().migrationsExecuted);
+        assertEquals(1,config(schema).target("5").load().migrate().migrationsExecuted);
         try(var c=connection(schema);var s=c.createStatement()) {
             var r=s.executeQuery("SELECT action,auth_version,actor_id FROM account_security_event WHERE id=1");
             assertTrue(r.next()); assertEquals("PASSWORD_CHANGED",r.getString(1)); assertEquals(1,r.getLong(2)); assertNull(r.getObject(3));
@@ -110,6 +112,60 @@ class PostgresMigrationTest {
             assertThrows(java.sql.SQLException.class,()->s.executeUpdate("INSERT INTO account_security_event(account_id,occurred_at,action,auth_version) VALUES (1,CURRENT_TIMESTAMP,'ACCOUNT_UPDATED',2)"));
             assertThrows(java.sql.SQLException.class,()->s.executeUpdate("UPDATE account_security_event SET action='PASSWORD_CHANGED' WHERE id=1"));
             assertThrows(java.sql.SQLException.class,()->s.executeUpdate("DELETE FROM account_security_event WHERE id=1"));
+        }
+    }
+
+    private void v5Grid(String schema) throws Exception {
+        assertEquals(5,config(schema).target("5").load().migrate().migrationsExecuted);
+        try(var c=connection(schema);var s=c.createStatement()) {
+            s.executeUpdate("INSERT INTO transformers(code,neighborhood,total_supplied_kwh) VALUES ('TEST-V6','Synthetic',200)");
+            s.executeUpdate("INSERT INTO residential_meters(meter_number,resident_name,address,billed_kwh,installation_location,remote_reading_enabled,transformer_id) VALUES ('TEST-V6-M1','Synthetic','Test',100,'UNKNOWN',false,1)");
+        }
+    }
+    @Test void v6PreservesExactReadingsAndEstimatesWithoutInventingAuthors() throws Exception {
+        String schema=schema();v5Grid(schema);
+        try(var c=connection(schema);var s=c.createStatement()) {
+            s.executeUpdate("INSERT INTO meter_readings(meter_id,recorded_at,energy_kwh,source) VALUES (1,'2026-01-01T00:00:00Z',123.456,'MANUAL')");
+            s.executeUpdate("INSERT INTO inspection_records(meter_id,created_at,reported_by,estimated_unaccounted_kwh,status) VALUES (1,'2026-01-01T00:00:00Z','synthetic',12.5,'PENDING_REVIEW')");
+        }
+        assertEquals(1,config(schema).load().migrate().migrationsExecuted);
+        try(var c=connection(schema);var s=c.createStatement()) {
+            var r=s.executeQuery("SELECT energy_kwh,ingested_by FROM meter_readings WHERE id=1");assertTrue(r.next());
+            assertEquals(new java.math.BigDecimal("123.456"),r.getBigDecimal(1));assertNull(r.getString(2));
+            r=s.executeQuery("SELECT estimated_unaccounted_kwh FROM inspection_records WHERE id=1");assertTrue(r.next());assertEquals(new java.math.BigDecimal("12.500"),r.getBigDecimal(1));
+            assertThrows(java.sql.SQLException.class,()->s.executeUpdate("INSERT INTO meter_readings(meter_id,recorded_at,energy_kwh,source) VALUES (1,'2026-01-01T00:00:00Z',1,'MANUAL')"));
+        }
+    }
+    @ParameterizedTest @ValueSource(strings={"-1","1.1234","'NaN'","'Infinity'","100000000000"})
+    void v6RefusesInvalidLegacyReadingsWithoutConvertingOrDeletingThem(String amount) throws Exception {
+        String schema=schema();v5Grid(schema);
+        try(var c=connection(schema);var s=c.createStatement()) {
+            s.executeUpdate("INSERT INTO meter_readings(meter_id,recorded_at,energy_kwh,source) VALUES (1,'2026-01-01T00:00:00Z',"+amount+",'MANUAL')");
+        }
+        assertThrows(FlywayException.class,()->config(schema).load().migrate());
+        try(var c=connection(schema);var s=c.createStatement()) {
+            var r=s.executeQuery("SELECT energy_kwh::text FROM meter_readings WHERE id=1");assertTrue(r.next());assertEquals(amount.replace("'",""),r.getString(1));
+            r=s.executeQuery("SELECT data_type FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='meter_readings' AND column_name='energy_kwh'");assertTrue(r.next());assertEquals("double precision",r.getString(1));
+        }
+    }
+    @Test void v6RefusesDuplicateLegacyReadingsWithoutDeletingEither() throws Exception {
+        String schema=schema();v5Grid(schema);
+        try(var c=connection(schema);var s=c.createStatement()) {
+            for(int i=0;i<2;i++)s.executeUpdate("INSERT INTO meter_readings(meter_id,recorded_at,energy_kwh,source) VALUES (1,'2026-01-01T00:00:00Z',12.5,'MANUAL')");
+        }
+        assertThrows(FlywayException.class,()->config(schema).load().migrate());
+        try(var c=connection(schema);var s=c.createStatement()) {
+            var r=s.executeQuery("SELECT count(*) FROM meter_readings");assertTrue(r.next());assertEquals(2,r.getInt(1));
+        }
+    }
+    @Test void v6RefusesOverPreciseLegacyInspectionBeforeAlteringEitherTable() throws Exception {
+        String schema=schema();v5Grid(schema);
+        try(var c=connection(schema);var s=c.createStatement()) {
+            s.executeUpdate("INSERT INTO inspection_records(meter_id,created_at,reported_by,estimated_unaccounted_kwh,status) VALUES (1,'2026-01-01T00:00:00Z','synthetic',0.0001,'PENDING_REVIEW')");
+        }
+        assertThrows(FlywayException.class,()->config(schema).load().migrate());
+        try(var c=connection(schema);var s=c.createStatement()) {
+            var r=s.executeQuery("SELECT estimated_unaccounted_kwh FROM inspection_records");assertTrue(r.next());assertEquals(0.0001,r.getDouble(1));
         }
     }
 }

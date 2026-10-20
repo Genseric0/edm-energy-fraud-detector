@@ -2,7 +2,8 @@ import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true,
+  ...(process.env.PLAYWRIGHT_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
 await mkdir('artifacts/screenshots', { recursive: true });
 try {
@@ -49,6 +50,10 @@ try {
   assert.equal(transformers.status(), 200);
   assert.ok((await transformers.json()).length > 0, 'Não existem transformadores de demonstração');
   await page.setViewportSize({ width: 390, height: 844 });
+  const mobileTransformers = page.getByRole('region', { name: 'Transformadores no telemóvel' });
+  await mobileTransformers.getByRole('button', { name: /Ver medidores de/ }).first().waitFor();
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false,
+    'Dashboard mobile não deve transbordar horizontalmente');
   await page.screenshot({ path: 'artifacts/screenshots/03-dashboard-mobile.png', fullPage: true });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole('button', { name: 'Medidores', exact: true }).first().click();
