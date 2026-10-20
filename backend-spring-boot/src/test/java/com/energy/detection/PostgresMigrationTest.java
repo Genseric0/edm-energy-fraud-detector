@@ -144,7 +144,7 @@ class PostgresMigrationTest {
         }
         assertThrows(FlywayException.class,()->config(schema).load().migrate());
         try(var c=connection(schema);var s=c.createStatement()) {
-            var r=s.executeQuery("SELECT energy_kwh::text FROM meter_readings WHERE id=1");assertTrue(r.next());assertEquals(amount.replace("'",""),r.getString(1));
+            var r=s.executeQuery("SELECT energy_kwh FROM meter_readings WHERE id=1");assertTrue(r.next());assertEquals(Double.parseDouble(amount.replace("'","")),r.getDouble(1));
             r=s.executeQuery("SELECT data_type FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='meter_readings' AND column_name='energy_kwh'");assertTrue(r.next());assertEquals("double precision",r.getString(1));
         }
     }

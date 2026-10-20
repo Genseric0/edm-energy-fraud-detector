@@ -2,6 +2,14 @@
 
 ## Estado e âmbito
 
+**Aviso da proposta local:** V5 e V6 ainda não foram executadas em PostgreSQL.
+V5 suporta administração auditável; V6 converte apenas leituras e estimativas para
+NUMERIC(14,3), acrescenta unicidade e autor de ingestão. Antes de qualquer arranque
+PostgreSQL desta branch, executar a CI e ensaiar numa cópia restaurada. V6 recusa
+valores não finitos/negativos/fora de intervalo, precisão excedente e duplicados;
+não apagar nem arredondar dados para contornar a recusa. Autor legado permanece NULL.
+As secções V1–V4 abaixo descrevem a base do PR #8, anteriormente validada na CI.
+
 O perfil `postgres` usa Flyway para criar/evoluir o esquema e Hibernate com `ddl-auto=validate` para verificar a compatibilidade com as entidades. V1 cria as quatro tabelas da rede, V2 acrescenta índices, V3 cria as contas persistentes e V4 cria a auditoria mínima de mudança de password. As migrações não incluem passwords nem dados reais. `DOUBLE PRECISION` foi preservado para evitar uma conversão de valores implícita; BigDecimal/NUMERIC terá uma migração própria.
 
 Isto não conclui a Fase 1: o modelo alvo completo, unicidade de leituras, precisão decimal e backup/restauro automatizado continuam pendentes. H2 é efémero e usa `create-drop`, com Flyway desactivado; não serve de validação das migrações PostgreSQL.
@@ -39,7 +47,8 @@ Antes de migrar uma base antiga:
 
 ## Desenvolvimento e validação
 
-Usar novas migrações `V5__...sql`, `V6__...sql`, etc. Nunca editar uma migração já aplicada. Checksums divergentes devem ser investigados, não ignorados.
+Esta proposta já reserva V5 e V6. Próximas alterações usam novas migrações V7 em diante.
+Nunca editar uma migração já aplicada. Checksums divergentes devem ser investigados, não ignorados.
 
 `mvn -B verify -f backend-spring-boot/pom.xml` exige Docker para os testes Testcontainers. A ausência de Docker faz o teste falhar, sem substituição por H2 nem skip automático.
 

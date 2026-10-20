@@ -1,6 +1,7 @@
 # Administração de contas existentes — proposta local
 
-Estado em 16/10/2026: implementação local não publicada e validação backend pendente.
+Estado em 16/10/2026: implementação local não publicada; validação parcial de backend
+agora executada em H2. PostgreSQL/CI e validação no navegador continuam pendentes.
 Base remota: `48ff1362ccd9060aa4b4f8425996ad12859528a4`, PR #8. Branch local:
 `feat/account-administration`. Não existe novo PR para este lote.
 
@@ -42,10 +43,14 @@ redução de papel, revogação, desbloqueio, snapshots antigas, motivo, reauten
 bloqueio por falhas, último ADMIN, concorrência entre administradores, rollback de
 auditoria e V4→V5. E2E foi preparado para gerir Helen sinteticamente e captar desktop/mobile.
 
-Executados: TypeScript/Vite build, `node --check e2e/capture.mjs`, `git diff --check`.
-Aviso de tamanho do bundle permanece. Não executados: Maven/backend, Testcontainers,
-migração V5, CodeQL deste lote e Playwright completo; Maven e Docker indisponíveis
-localmente. Não existem novas capturas verificadas: os prints anteriores são do PR #8.
+Executados: TypeScript/Vite build, `node --check e2e/capture.mjs`, `git diff --check`,
+compilação de todo o código Java/testes e 65 testes locais seleccionados. Os 13 testes
+`LocalApiFlowsTest` usam H2 real e a cadeia Spring/JWT, incluindo gestão de estado,
+revogação, autorização, último ADMIN e desactivação concorrente. O restante conjunto
+seleccionado verifica autenticação, DTOs, políticas e limites. Não substitui PostgreSQL.
+Aviso de tamanho do bundle permanece. Não executados: Testcontainers, migrações V5/V6,
+CodeQL deste lote e Playwright completo. O ambiente bloqueia o arranque do navegador
+(socket local não permitido). Não existem novas capturas verificadas: prints do PR #8.
 
 ## Bloqueio e retoma
 
