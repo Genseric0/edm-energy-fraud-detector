@@ -12,6 +12,10 @@ import java.util.Map;
 /** Respostas estáveis sem SQL, stack traces ou detalhes internos. */
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(AccountConflictException.class)
+    public ResponseEntity<?> accountConflict(AccountConflictException exception) {
+        return ResponseEntity.status(409).body(Map.of("message", exception.getMessage()));
+    }
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<?> notFound(ResourceNotFoundException exception) {
         return ResponseEntity.status(404).body(Map.of("message", "Recurso não encontrado"));

@@ -24,4 +24,10 @@ public class AccountSecurityEvent {
     private String action;
     @Column(name = "auth_version", nullable = false)
     private long authVersion;
+    @Column(name = "actor_id") private Long actorId;
+    @Column(length = 500) private String reason;
+    @Enumerated(EnumType.STRING) @Column(name = "old_role", length = 32) private AccountRole oldRole;
+    @Enumerated(EnumType.STRING) @Column(name = "new_role", length = 32) private AccountRole newRole;
+    @Column(name = "old_active") private Boolean oldActive;
+    @Column(name = "new_active") private Boolean newActive;
 }

@@ -41,8 +41,11 @@ public class LoginRateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
-        if ("POST".equals(request.getMethod())
-                && ("/api/auth/login".equals(request.getServletPath()) || "/api/auth/password".equals(request.getServletPath()))
+        boolean credentialOperation = "POST".equals(request.getMethod())
+            && ("/api/auth/login".equals(request.getServletPath()) || "/api/auth/password".equals(request.getServletPath()));
+        boolean adminMutation = ("POST".equals(request.getMethod()) || "PUT".equals(request.getMethod()))
+            && request.getServletPath().startsWith("/api/admin/accounts/");
+        if ((credentialOperation || adminMutation)
                 && !allow(request.getRemoteAddr())) {
             response.setStatus(429);
             response.setHeader("Retry-After", "60");

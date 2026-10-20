@@ -33,13 +33,13 @@ class PostgresMigrationTest {
     @Test void freshSchemaMigratesAndRepeatedStartupDoesNotReapply() throws Exception {
         String schema = schema();
         Flyway flyway = config(schema).load();
-        assertEquals(4, flyway.migrate().migrationsExecuted);
+        assertEquals(5, flyway.migrate().migrationsExecuted);
         flyway.validate();
         assertEquals(0, flyway.migrate().migrationsExecuted);
         try (var c = connection(schema); var s = c.createStatement()) {
             var result = s.executeQuery("SELECT count(*) FROM flyway_schema_history WHERE success AND version IS NOT NULL");
             assertTrue(result.next());
-            assertEquals(4, result.getInt(1));
+            assertEquals(5, result.getInt(1));
             result = s.executeQuery("SELECT count(*) FROM information_schema.tables WHERE table_schema = current_schema() AND table_name IN ('transformers','residential_meters','meter_readings','inspection_records','app_user')");
             assertTrue(result.next());
             assertEquals(5, result.getInt(1));
@@ -56,7 +56,7 @@ class PostgresMigrationTest {
             s.executeUpdate("INSERT INTO meter_readings (meter_id,recorded_at,energy_kwh,source) VALUES (1,'2026-01-01T00:00:00Z',123.45,'MANUAL')");
             s.executeUpdate("INSERT INTO inspection_records (meter_id,created_at,reported_by,estimated_unaccounted_kwh,status) VALUES (1,'2026-01-01T00:00:00Z','test',12.5,'PENDING_REVIEW')");
         }
-        assertEquals(3, config(schema).load().migrate().migrationsExecuted);
+        assertEquals(4, config(schema).load().migrate().migrationsExecuted);
         try (var c = connection(schema); var s = c.createStatement()) {
             var result = s.executeQuery("SELECT energy_kwh FROM meter_readings WHERE id=1");
             assertTrue(result.next());
@@ -92,6 +92,24 @@ class PostgresMigrationTest {
             var result = s.executeQuery("SELECT id FROM legacy_marker");
             assertTrue(result.next());
             assertEquals(42, result.getInt(1));
+        }
+    }
+
+    @Test void v5PreservesV4AuditAndAddsAdministrationGuardAndMetadataConstraints() throws Exception {
+        String schema = schema();
+        assertEquals(4, config(schema).target("4").load().migrate().migrationsExecuted);
+        try(var c=connection(schema);var s=c.createStatement()) {
+            s.executeUpdate("INSERT INTO app_user(username,password_hash,display_name,role,auth_version) VALUES ('synthetic-admin','test-only-hash','Synthetic','ADMIN',1)");
+            s.executeUpdate("INSERT INTO account_security_event(account_id,occurred_at,action,auth_version) VALUES (1,'2026-01-01T00:00:00Z','PASSWORD_CHANGED',1)");
+        }
+        assertEquals(1,config(schema).load().migrate().migrationsExecuted);
+        try(var c=connection(schema);var s=c.createStatement()) {
+            var r=s.executeQuery("SELECT action,auth_version,actor_id FROM account_security_event WHERE id=1");
+            assertTrue(r.next()); assertEquals("PASSWORD_CHANGED",r.getString(1)); assertEquals(1,r.getLong(2)); assertNull(r.getObject(3));
+            r=s.executeQuery("SELECT count(*) FROM account_management_guard WHERE id=1"); assertTrue(r.next()); assertEquals(1,r.getInt(1));
+            assertThrows(java.sql.SQLException.class,()->s.executeUpdate("INSERT INTO account_security_event(account_id,occurred_at,action,auth_version) VALUES (1,CURRENT_TIMESTAMP,'ACCOUNT_UPDATED',2)"));
+            assertThrows(java.sql.SQLException.class,()->s.executeUpdate("UPDATE account_security_event SET action='PASSWORD_CHANGED' WHERE id=1"));
+            assertThrows(java.sql.SQLException.class,()->s.executeUpdate("DELETE FROM account_security_event WHERE id=1"));
         }
     }
 }

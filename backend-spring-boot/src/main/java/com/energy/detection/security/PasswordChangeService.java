@@ -45,6 +45,6 @@ public class PasswordChangeService {
         account.setFailedAttempts(0);
         account.setLockedUntil(null);
         events.save(AccountSecurityEvent.builder().accountId(account.getId()).occurredAt(clock.instant())
-            .action("PASSWORD_CHANGED").authVersion(nextVersion).build());
+            .action("PASSWORD_CHANGED").actorId(account.getId()).authVersion(nextVersion).build());
     }
 }
