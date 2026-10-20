@@ -49,4 +49,15 @@ class LoginRateLimitTest {
         filter.doFilter(request, response, (req, res) -> fail("Rate limit contornado"));
         assertEquals(429, response.getStatus());
     }
+    @Test void adminMutationsShareCredentialAttemptBudget() throws Exception {
+        var filter = new LoginRateLimitFilter(new MutableClock());
+        for(int i=0;i<10;i++) login(filter,"192.0.2.4");
+        for(String method:java.util.List.of("PUT","POST")) {
+            var request=new MockHttpServletRequest(method,"/api/admin/accounts/1");
+            request.setServletPath("/api/admin/accounts/1"); request.setRemoteAddr("192.0.2.4");
+            var response=new MockHttpServletResponse();
+            filter.doFilter(request,response,(req,res)->fail("Admin mutation bypassed rate limit"));
+            assertEquals(429,response.getStatus());
+        }
+    }
 }

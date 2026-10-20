@@ -10,8 +10,12 @@ Um alerta não comprova fraude. Não aplica multas. A demonstração usa dados s
 
 Competências demonstradas: React/TypeScript, API Java/Spring, autenticação JWT/RBAC,
 PostgreSQL/Flyway, testes concorrentes com Testcontainers e E2E com Playwright.
-As melhorias desta branch estão propostas em PRs dependentes; não estão integradas em
-`main`. O roadmap completo e a prontidão para produção permanecem em desenvolvimento.
+Os lotes anteriores estão propostos nos PRs #2–#8, sem integração em `main`.
+Esta branch acrescenta uma **proposta local** de administração de contas, qualidade dos
+registos e interface mobile. A publicação foi recusada pelo GitHub (403 de permissão).
+65 testes locais passaram, incluindo H2; PostgreSQL/CI e validação visual desta revisão
+estão pendentes. O roadmap completo e a prontidão para produção permanecem em desenvolvimento.
+Ver [qualidade dos dados](docs/data-quality-local.md) e [critérios para clientes](docs/commercial-readiness.md).
 
 ![Dashboard desktop com dados sintéticos](docs/screenshots/02-dashboard.png)
 
@@ -138,6 +142,8 @@ As credenciais anteriormente publicadas devem ser consideradas comprometidas e s
 ## Funcionalidades disponíveis
 
 - Dashboard com resumo agregado (energia fornecida, faturada, perdida, alertas críticos)
+- Na proposta local: alertas em cartões no telemóvel, pesquisa acessível, estado vazio
+  explícito e aviso quando o resumo não consegue actualizar após uma alteração.
 - Gráfico comparativo de discrepância por transformador
 - Tabela de auditoria com filtro por status (crítico/normal) e busca
 - Detalhe por transformador: cálculo individualizado de perda pro-rata por medidor,
@@ -176,6 +182,14 @@ Uma tabela `meter_readings` guarda leituras históricas com data, energia em kWh
 
 Nesta fase, os registos têm origem `MANUAL`. Ainda não existe integração com hardware, protocolo AMI, leitura automática ou validação metrológica. A base H2 continua a ser volátil: os históricos desaparecem quando se reinicia a aplicação.
 
+**Qualidade nesta proposta local:** leituras e estimativas de vistoria usam BigDecimal
+com até três casas decimais e limite de `99999999999.999` kWh. O servidor regista o autor
+autenticado em `ingestedBy` nas novas leituras. Registos legados ficam com autor não
+confirmado (`null`). Repetir contador/instante/origem devolve 409, sem inserir duplicado;
+instantes com precisão superior a microssegundos e datas futuras são recusados.
+Os totais de transformadores/contadores e o motor de balanço ainda não foram migrados
+integralmente para BigDecimal nem ligados a períodos compatíveis de leituras.
+
 **Importante:** variações de consumo e discrepâncias por transformador são indícios para investigação. A posição do contador e a análise estatística não comprovam que houve bypass ou fraude; é indispensável confirmação técnica. O limiar de 5% e a tarifa de 7,50 MT/kWh são valores de demonstração, não parâmetros oficiais validados.
 
 Os testes de compilação e de API executam automaticamente no GitHub Actions após alterações e diariamente por agendamento; a confirmação deve ser feita no separador Actions do repositório.
@@ -192,7 +206,12 @@ O H2 continua a ser o perfil de demonstração por defeito. Para guardar os dado
 
 A configuração está em `application-postgres.properties`. Os dados ficam no volume Docker `gridaudit_pgdata`, que sobrevive a `docker compose down` (mas **não** a `docker compose down -v`).
 
-**Migrações:** PostgreSQL usa Flyway V1–V4 e `hibernate.ddl-auto=validate`. Bases antigas não vazias e sem histórico Flyway são recusadas; é necessária adopção revista numa cópia restaurada, conforme [runbook](docs/runbooks/postgres-migrations.md). Nunca activar baseline automático para contornar esse erro. Contas e dados demonstrativos do DataSeeder não são dados reais de clientes EDM.
+**Migrações:** a base do PR #8 tem Flyway V1–V4. Esta proposta local acrescenta V5–V6,
+ainda sem execução comprovada em PostgreSQL, mantendo `hibernate.ddl-auto=validate`.
+V6 recusa valores legados inválidos, precisão excedente e leituras duplicadas, sem
+arredondar ou apagar dados para contornar o problema. Rever e testar numa cópia restaurada,
+conforme [runbook](docs/runbooks/postgres-migrations.md). Nunca activar baseline automático.
+Dados demonstrativos do DataSeeder não são dados reais de clientes EDM.
 
 ## Roadmap e segurança
 

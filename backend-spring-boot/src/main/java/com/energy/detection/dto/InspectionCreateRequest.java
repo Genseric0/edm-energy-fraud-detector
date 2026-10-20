@@ -1,10 +1,9 @@
 package com.energy.detection.dto;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
 
 public record InspectionCreateRequest(
-    @NotNull @PositiveOrZero Double estimatedUnaccountedKwh,
+    @NotNull @DecimalMin("0") @DecimalMax("99999999999.999") @Digits(integer = 11, fraction = 3) BigDecimal estimatedUnaccountedKwh,
     @Size(max = 4000) String inspectionNotes
 ) {}

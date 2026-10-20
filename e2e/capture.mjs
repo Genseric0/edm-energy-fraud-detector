@@ -2,7 +2,8 @@ import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true,
+  ...(process.env.PLAYWRIGHT_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH } : {}) });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
 await mkdir('artifacts/screenshots', { recursive: true });
 try {
@@ -49,6 +50,10 @@ try {
   assert.equal(transformers.status(), 200);
   assert.ok((await transformers.json()).length > 0, 'Não existem transformadores de demonstração');
   await page.setViewportSize({ width: 390, height: 844 });
+  const mobileTransformers = page.getByRole('region', { name: 'Transformadores no telemóvel' });
+  await mobileTransformers.getByRole('button', { name: /Ver medidores de/ }).first().waitFor();
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false,
+    'Dashboard mobile não deve transbordar horizontalmente');
   await page.screenshot({ path: 'artifacts/screenshots/03-dashboard-mobile.png', fullPage: true });
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.getByRole('button', { name: 'Medidores', exact: true }).first().click();
@@ -63,6 +68,26 @@ try {
   const download = await downloadPromise;
   assert.match(download.suggestedFilename(), /^GridAudit_Demonstracao_.*\.pdf$/);
   await download.saveAs('artifacts/demo-report.pdf');
+  await page.getByRole('button', { name: 'Administração de contas', exact: true }).click();
+  const accountsDialog = page.getByRole('dialog');
+  await accountsDialog.getByRole('button', { name: 'Editar helen', exact: true }).waitFor();
+  await page.screenshot({ path: 'artifacts/screenshots/07-accounts-desktop.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const accountsBox = await accountsDialog.boundingBox();
+  assert.ok(accountsBox && accountsBox.x >= 0 && accountsBox.y >= 0
+    && accountsBox.x + accountsBox.width <= 390 && accountsBox.y + accountsBox.height <= 844);
+  await page.screenshot({ path: 'artifacts/screenshots/08-accounts-mobile.png' });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (const enabled of [false, true]) {
+    await accountsDialog.getByRole('button', { name: 'Editar helen', exact: true }).click();
+    await accountsDialog.getByLabel('Conta activa', { exact: true }).setChecked(enabled);
+    await accountsDialog.getByLabel('Motivo (sem passwords nem dados de clientes)', { exact: true }).fill('Verificação E2E com conta sintética');
+    await accountsDialog.getByLabel('A sua password actual', { exact: true }).fill(process.env.EDM_GENSERICO_PASSWORD);
+    await accountsDialog.getByRole('button', { name: 'Confirmar operação', exact: true }).click();
+    await accountsDialog.getByText('Operação concluída para helen. Sessões anteriores invalidadas.', { exact: true }).waitFor();
+    await accountsDialog.getByRole('row').filter({ hasText: 'helen' }).getByText(enabled ? 'Activa' : 'Inactiva', { exact: true }).waitFor();
+  }
+  await accountsDialog.getByRole('button', { name: 'Fechar', exact: true }).click();
   await page.getByRole('button', { name: 'Alterar password', exact: true }).click();
   const passwordDialog = page.getByRole('dialog');
   await passwordDialog.waitFor();
@@ -96,7 +121,7 @@ try {
   await page.getByRole('button', { name: /Acessar Dashboard/i }).click();
   await page.getByText('Total Fornecido').waitFor();
   assert.deepEqual(pageErrors, [], 'Excepções JavaScript na interface');
-  console.log('Login, persistência, dashboard, PDF, mudança de password e revogação verificados.');
+  console.log('Login, persistência, dashboard, PDF, administração de contas, mudança de password e revogação verificados.');
 } finally {
   await browser.close();
 }

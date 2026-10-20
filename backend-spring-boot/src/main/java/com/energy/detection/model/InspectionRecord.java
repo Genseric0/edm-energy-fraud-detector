@@ -3,6 +3,7 @@ package com.energy.detection.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.Instant;
+import java.math.BigDecimal;
 
 /** Registo preliminar de vistoria; não constitui prova de fraude nem auto de multa. */
 @Entity
@@ -22,8 +23,8 @@ public class InspectionRecord {
     @Column(name = "reported_by", nullable = false, updatable = false)
     private String reportedBy;
 
-    @Column(name = "estimated_unaccounted_kwh", nullable = false)
-    private Double estimatedUnaccountedKwh;
+    @Column(name = "estimated_unaccounted_kwh", nullable = false, precision = 14, scale = 3)
+    private BigDecimal estimatedUnaccountedKwh;
 
     @Column(name = "inspection_notes", length = 4000)
     private String inspectionNotes;

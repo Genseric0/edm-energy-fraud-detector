@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Zap, ShieldAlert, RotateCcw, LogOut, User, Shield, KeyRound } from 'lucide-react';
+import { Zap, ShieldAlert, RotateCcw, LogOut, User, Shield, KeyRound, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { PasswordChangeDialog } from './PasswordChangeDialog';
+import { AdminAccountsDialog } from './AdminAccountsDialog';
 
 interface HeaderProps {
   onResetData: () => void;
@@ -14,6 +15,7 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { user, logout, isAdmin } = useAuth();
   const [changingPassword, setChangingPassword] = useState(false);
+  const [administering, setAdministering] = useState(false);
 
   return (
     <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-30">
@@ -85,6 +87,8 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 <KeyRound className="w-4 h-4" />
               </button>
+              {isAdmin && <button type="button" onClick={() => setAdministering(true)} title="Administração de contas" aria-label="Administração de contas"
+                className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 border border-slate-700/60"><Users className="w-4 h-4" /></button>}
               <button
                 onClick={logout}
                 title="Encerrar Sessão (Logout)"
@@ -98,6 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       </div>
       {changingPassword && <PasswordChangeDialog onClose={() => setChangingPassword(false)} />}
+      {administering && <AdminAccountsDialog onClose={() => setAdministering(false)} />}
     </header>
   );
 };

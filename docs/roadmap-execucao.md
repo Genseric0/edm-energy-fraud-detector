@@ -209,3 +209,69 @@ refresh/revogação por sessão. Em dados: BigDecimal/NUMERIC, unicidade/proveni
 leituras e períodos de balanço compatíveis. SEC-02, actualização de framework e teste
 de restauro continuam bloqueios de produção. A Fase 0 não está concluída e este lote
 não foi integrado em main. Revisão humana continua obrigatória na cadeia #2 → #8.
+
+## Oitavo lote — 16/10/2026, proposta local bloqueada na publicação
+
+PR #8 confirmado aberto em `48ff136`, com CI backend/frontend, CodeQL e
+PostgreSQL/Playwright aprovados, incluindo a revisão final de documentação. Os PRs
+#2–#8 permanecem sem merge. Base do novo trabalho: #8; branch local
+`feat/account-administration`. Fase 0 continua em curso.
+
+Implementadas localmente API e interface para administrar contas existentes: consulta
+paginada sem hashes, papel/estado, desbloqueio e revogação de tokens por conta. Password
+actual e motivo são obrigatórios; versão esperada recusa formulários antigos. Lock
+estável serializa transições, revalida o actor e protege o último ADMIN activo. V5
+acrescenta guard e metadados de auditoria, preservando os eventos existentes.
+Detalhes, ficheiros e critérios de teste em [proposta](account-administration-proposal.md).
+
+Evidência local: build TypeScript/Vite, sintaxe E2E e diff aprovados. Foram escritos
+testes PostgreSQL e E2E para autorização, revogação, concorrência, reautenticação,
+rollback e migração, mas **não executados**: Maven/Docker não estão disponíveis neste
+ambiente e a CI depende de publicar a branch. Não foram produzidos novos prints.
+
+**Bloqueio:** GitHub devolveu `403 Resource not accessible by integration` na criação
+da árvore de ficheiros. Não foi criado novo PR, não houve publicação deste lote e o
+controlo de acesso não foi contornado. O trabalho foi preservado num commit local e
+num pacote de retoma. A continuação automática foi pausada até restaurar acesso de
+escrita ao repositório. Retoma: revalidar estado remoto, publicar branch dependente de
+#8, executar CI, corrigir resultados, inspeccionar prints reais e só então pedir revisão.
+
+Métricas públicas observadas em 16/10/2026: 0 estrelas e 0 forks, variação zero.
+Contribuidores e tráfego não confirmados. Nenhuma fase marcada como concluída.
+
+## Nono lote — 16/10/2026, qualidade dos registos e interface
+
+Continuação local autorizada: `feat/readings-quality-ui`, sobre `8fbb686` (administração
+proposta) e base remota `48ff136` do PR #8. Código funcional novo em `5b1d5b6`.
+PRs #2–#8 continuam abertos/sem merge; nenhum novo PR foi criado.
+
+- `MeterReadingRequest`, `InspectionCreateRequest` e entidades: BigDecimal, limite
+  NUMERIC(14,3) e rejeição de valores não finitos, negativos, excedentes e precisão inválida.
+- `MeterReadingController`/view e V6: autor da sessão nas novas leituras; legado sem
+  autor confirmado fica NULL. Instantes acima de microssegundos são recusados e a
+  unicidade contador/instante/origem protege contra repetição e escrita concorrente.
+- V6 contém preflight sem limpeza/arredondamento implícitos; testes PostgreSQL adicionais
+  preparados para preservação de registos e recusa de dados legados inválidos/duplicados.
+- `AlertsTable`: cartões mobile com dados e acções legíveis, pesquisa com nome acessível
+  e estados de filtro. Desktop mantém tabela. `App`: estado vazio, aviso de resumo
+  desactualizado e protecção contra respostas de recarregamento fora de ordem.
+- `LocalApiFlowsTest`: 13 fluxos H2 verificam API/JWT, administração, último ADMIN,
+  desactivação concorrente, exactidão decimal, autor, duplicados e estimativas sem multa.
+  Mockito usa subclass mock maker para funcionar sem auto-attach de agente na JVM.
+
+**Validação executada:** Maven 3.9.9/Java 17, 65 testes locais seleccionados, zero
+falhas/erros/ignorados, pacote backend gerado; compilação de todas as classes de teste
+incluindo PostgreSQL aprovada. TypeScript/Vite, sintaxe E2E e diff aprovados.
+Classes PostgreSQL não executadas: PostgresMigrationTest, AccountPersistenceTest e
+AccountAdministrationTest. H2 não substitui esse critério. O ambiente recusou o arranque
+do navegador por bloqueio de socket; nenhuma nova captura foi apresentada como verificada.
+
+**Publicação:** nova tentativa concreta devolveu novamente 403 `Resource not accessible
+by integration` na criação de árvore GitHub. Não foi tentado outro caminho de escrita.
+Continuam pendentes acesso de escrita, publicação/PR, CI PostgreSQL/CodeQL/Playwright e
+revisão humana. O pacote de retoma foi actualizado para preservar todos os commits locais.
+
+[Qualidade e evidência](data-quality-local.md) e [critérios para clientes](commercial-readiness.md)
+detalham o que falta: contas reais/áreas, isolamento, balanço temporal, processo de casos,
+actualização de framework e backup/restauro. Não se declara uso real nem fase concluída.
+Métricas observadas: 0 estrelas, 0 forks; variação zero. Sem dados de tráfego/contribuidores.

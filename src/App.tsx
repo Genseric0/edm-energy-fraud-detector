@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginView } from './components/LoginView';
 import { Header } from './components/Header';
@@ -9,7 +9,7 @@ import { TransformerDetailView } from './components/TransformerDetailView';
 import { energyApi } from './api/energyApi';
 import { ApiError } from './api/client';
 import { TransformerAnalysis, DashboardSummary } from './types/energy';
-import { Loader2, WifiOff, RotateCcw, Info } from 'lucide-react';
+import { Loader2, WifiOff, RotateCcw, Info, Database } from 'lucide-react';
 
 export default function App() {
   return (
@@ -48,8 +48,11 @@ function Dashboard() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshWarning, setRefreshWarning] = useState<string | null>(null);
+  const requestVersion = useRef(0);
 
   const loadData = useCallback(async () => {
+    const version = ++requestVersion.current;
     setIsLoading(true);
     setError(null);
     try {
@@ -57,21 +60,24 @@ function Dashboard() {
         energyApi.getAllTransformers(),
         energyApi.getSummary(),
       ]);
+      if (version !== requestVersion.current) return;
       setTransformers(transformersData);
       setSummary(summaryData);
+      setRefreshWarning(null);
     } catch (err) {
       const message =
         err instanceof ApiError
           ? err.message
           : 'Erro inesperado ao carregar os dados do servidor.';
-      setError(message);
+      if (version === requestVersion.current) setError(message);
     } finally {
-      setIsLoading(false);
+      if (version === requestVersion.current) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
     loadData();
+    return () => { requestVersion.current++; };
   }, [loadData]);
 
   const selectedTransformer = transformers.find((t) => t.transformerId === selectedTransformerId) ?? null;
@@ -104,8 +110,8 @@ function Dashboard() {
     );
     // O resumo agregado (totais, contagem de alertas) depende de todos os transformadores,
     // por isso é recarregado do backend em vez de recalculado no cliente.
-    energyApi.getSummary().then(setSummary).catch(() => {
-      /* Falha silenciosa: os cartões de resumo simplesmente não atualizam neste ciclo. */
+    energyApi.getSummary().then(data => { setSummary(data); setRefreshWarning(null); }).catch(() => {
+      setRefreshWarning('O sector foi actualizado, mas o resumo pode estar desactualizado. Recarregue os dados.');
     });
   };
 
@@ -119,6 +125,11 @@ function Dashboard() {
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div><p className="text-xs uppercase tracking-wider text-amber-400 font-semibold">GridAudit</p><h2 className="text-2xl font-bold mt-1">Balanço de energia</h2><p className="text-sm text-slate-400 mt-1">Compare a rede, identifique discrepâncias e apoie a investigação técnica.</p></div>
+          <span className="rounded-full border border-amber-700/60 bg-amber-950/30 px-3 py-1 text-xs text-amber-200">Protótipo · parâmetros demonstrativos</span>
+        </div>
+        {refreshWarning && <div role="alert" className="rounded-xl border border-amber-700 bg-amber-950/30 p-4 text-sm text-amber-200">{refreshWarning}</div>}
         <section role="note" aria-label="Cobertura e limitações" className="rounded-2xl border border-sky-800/60 bg-sky-950/30 p-4 sm:p-5">
           <div className="flex items-start gap-3">
             <Info className="w-5 h-5 text-sky-300 shrink-0 mt-0.5" />
@@ -165,6 +176,13 @@ function Dashboard() {
             onNormalizeSector={handleNormalizeSector}
             isAdmin={isAdmin}
           />
+        ) : transformers.length === 0 ? (
+          <section aria-label="Rede sem dados" className="rounded-2xl border border-slate-700 bg-slate-900/70 px-6 py-14 text-center">
+            <Database className="mx-auto h-10 w-10 text-slate-500" />
+            <h2 className="mt-4 text-lg font-bold">Ainda não há transformadores</h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-slate-400">Esta instalação não tem dados de rede. Consulte o responsável pela configuração antes de introduzir dados reais.</p>
+            <button type="button" onClick={loadData} className="mt-5 rounded-lg bg-slate-800 px-4 py-3 text-sm font-semibold text-white">Actualizar dados</button>
+          </section>
         ) : (
           <>
             {summary && <SummaryCards summary={summary} />}

@@ -8,6 +8,13 @@ Contactar o mantenedor por um canal privado previamente combinado. Se estiver di
 
 ## Limites actuais
 
+**Proposta local posterior ao PR #8:** há API/UI de gestão das contas existentes,
+confirmadas parcialmente em H2 (65 testes locais seleccionados), e migrações V5/V6
+preparadas para auditoria administrativa e precisão/proveniência dos registos.
+PostgreSQL/CI e validação visual desta proposta permanecem pendentes. Criação/convite
+de novas contas, âmbito por área e isolamento entre clientes não estão implementados.
+Consultar `docs/data-quality-local.md` e `docs/commercial-readiness.md`.
+
 - As contas iniciais são persistidas com hash BCrypt e passwords individuais obrigatórias e distintas. A própria conta pode mudar a password pela interface/API, confirmando a actual. Administração de contas reais, recuperação de acesso, MFA e revogação por sessão permanecem pendentes.
 - Cada pedido com token consulta o utilizador actual: contas removidas, desactivadas, bloqueadas ou expiradas não autenticam; as permissões vêm do servidor, não das claims antigas. `POST /api/auth/password` muda o hash e incrementa `auth_version` atomicamente com o evento de auditoria; tokens antigos deixam de autenticar nos pedidos seguintes. Uma edição directa do hash na BD não incrementa automaticamente a versão e não é o fluxo suportado. Pedidos já em execução não podem ser retroactivamente cancelados.
 - Os tokens têm duração máxima de 15 minutos e ficam apenas na memória do navegador. Recarregar a página ou expirar a sessão exige novo login; refresh ainda não foi implementado.

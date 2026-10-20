@@ -75,6 +75,7 @@ public class SecurityConfig {
                 // Rotas públicas (login e H2 Console, útil para inspecionar dados durante a demo)
                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                 .requestMatchers("/error").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                 // Regra do Administrador: Apenas ADMIN pode visualizar alertas críticos e gerenciar dados
                 .requestMatchers("/api/energy/alerts").hasRole("ADMIN")

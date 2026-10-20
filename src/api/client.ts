@@ -58,7 +58,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     });
   } catch (networkError) {
     throw new ApiError(
-      'Não foi possível contactar o servidor. Verifique se o backend Spring Boot está a correr em http://localhost:8080.',
+      'Não foi possível contactar o serviço. Verifique a ligação e tente novamente.',
       0
     );
   }
